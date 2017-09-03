@@ -1,0 +1,1 @@
+mklink /h "K:\Steam\steamapps\common\Fallout 4\Data\Chronicle.esp" "K:\FO4 Mods\Chronicle\Data\Chronicle.esp"
