@@ -7,11 +7,19 @@ Function attemptInstallation()
 	if (MyPackage.isInstalled())
 		Chronicle:Logger:Package.logShepherdAlreadyInstalled(self)
 		Stop()
+		return
 	endif
-
+	
+	Chronicle:Engine engineRef = MyPackage.getEngine()
+	if (!engineRef.isInstallerReady())
+		RegisterForCustomEvent(engineRef, "InstallerInitialized")
+		return
+	endif
+	
 	if (MyPackage.requestInstallation())
 		Chronicle:Logger:Package.logShepherdQueuePackage(self)
 		Stop()
+		return
 	endif
 EndFunction
 
@@ -22,4 +30,11 @@ EndFunction
 
 Event OnQuestInit()
 	attemptInstallation()
+EndEvent
+
+Event Chronicle:Engine.InstallerInitialized(Chronicle:Engine akSender, Var[] args)
+	if (MyPackage.getEngine() == akSender)
+		UnregisterForCustomEvent(akSender, "InstallerInitialized")
+		attemptInstallation()
+	endif
 EndEvent

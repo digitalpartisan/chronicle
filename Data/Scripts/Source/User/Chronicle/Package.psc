@@ -38,7 +38,6 @@ EndGroup
 Chronicle:Version:Static NextUpdate = None
 
 String sStateDormant = "Dormant" Const
-String sStateQueuedForInstallation = "QueuedForInstallation" Const
 String sStateSetup = "Setup" Const
 String sStateIdle = "Idle" Const
 String sStateUpdating = "Updating" Const
@@ -101,7 +100,7 @@ Bool Function canInstallLogic()
 EndFunction
 
 Bool Function canInstall()
-	return false
+	return canInstallLogic()
 EndFunction
 
 Bool Function canUninstall()
@@ -167,44 +166,13 @@ Auto State Dormant
 		Chronicle:Logger.logStateChange(self, asOldState)
 	EndEvent
 	
-	Bool Function isInstalled()
-		return false
-	EndFunction
-	
-	Bool Function isCurrent()
-		return false
-	EndFunction
-	
-	Bool Function canInstall()
-		return canInstallLogic()
-	EndFunction
-	
 	Bool Function requestInstallation()
 		if (getEngine().installPackage(self))
-			GoToState(sStateQueuedForInstallation)
 			return true
 		else
 			Chronicle:Logger:Package.logCannotInstall(self)
 			return false
 		endif
-	EndFunction
-EndState
-
-State QueuedForInstallation
-	Event OnBeginState(String asOldState)
-		Chronicle:Logger.logStateChange(self, asOldState)
-	EndEvent
-
-	Bool Function isInstalled()
-		return false
-	EndFunction
-	
-	Bool Function isCurrent()
-		return false
-	EndFunction
-	
-	Bool Function canInstall()
-		return canInstallLogic()
 	EndFunction
 	
 	Event OnQuestInit()
@@ -227,24 +195,24 @@ State Setup
 			Chronicle:Logger:Package.logCustomInstallBehaviorFailed(self)
 			SendCustomEvent("InstallFailed")
 			GoToState(sStateFatalError)
+			return
 		endif
 		
 		if (!getCurrentVersion().setTo(getVersionSetting()))
 			Chronicle:Logger:Package.logCouldNotInitializeCurrentVersion(self)
 			SendCustomEvent("InstallFailed")
 			GoToState(sStateFatalError)
+			return
 		endif
 		
 		SendCustomEvent("InstallComplete")
+		
 		if (InstallationMessage)
 			InstallationMessage.Show()
 		endif
+		
 		GoToState(sStateIdle)
 	EndEvent
-	
-	Bool Function canInstall()
-		return canInstallLogic()
-	EndFunction
 EndState
 
 State Idle

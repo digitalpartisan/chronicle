@@ -1,4 +1,4 @@
-Scriptname Chronicle:EngineComponent:updater extends Chronicle:EngineComponent
+Scriptname Chronicle:EngineComponent:Updater extends Chronicle:EngineComponent
 
 String sStateCoreUpdate = "CoreUpdate" Const
 String sStatePackageUpdates = "PackageUpdates" Const
@@ -9,16 +9,20 @@ EndFunction
 
 Function observePackageUpdate()
 	Chronicle:Package targetRef = getTargetPackage()
-	; - todo message
+	
 	RegisterForCustomEvent(targetRef, "UpdateComplete")
 	RegisterForCustomEvent(targetRef, "UpdateFailed")
+	
+	Chronicle:Logger:Engine:Updater.logListening(self, targetRef)
 EndFunction
 
 Function stopObservingPackageUpdate()
 	Chronicle:Package targetRef = getTargetPackage()
-	; - message here
+	
 	UnregisterForCustomEvent(targetRef, "UpdateComplete")
 	UnregisterForCustomEvent(targetRef, "UpdateFailed")
+	
+	Chronicle:Logger:Engine:Updater.logStopListening(self, targetRef)
 EndFunction
 
 Function postProcessingBehavior()
@@ -29,7 +33,7 @@ Function processNextPackage()
 	
 EndFunction
 
-Function process()
+Function goToProcessingState()
 	GoToState(sStateCoreUpdate)
 EndFunction
 
@@ -38,10 +42,9 @@ Event Chronicle:Package.UpdateComplete(Chronicle:Package packageRef, Var[] args)
 	
 	Chronicle:Package targetRef = getTargetPackage()	
 	if (targetRef == packageRef)
-		; - message here
 		postProcessingBehavior()
 	else
-		; TODO error message about wrong object updating
+		Chronicle:Logger:Engine:Updater.logPhantomResponse(self, targetRef, packageRef)
 		triggerFatalError()
 	endif
 EndEvent
@@ -51,15 +54,21 @@ Event Chronicle:Package.UpdateFailed(Chronicle:Package packageRef, Var[] args)
 	
 	Chronicle:Package targetRef = getTargetPackage()
 	if (targetRef != packageRef)
-		; TODO error message about wrong object updating
+		Chronicle:Logger:Engine:Updater.logPhantomResponse(self, targetRef, packageRef)
 	endif
 	
+	Chronicle:Logger:Engine:Updater.logFailure(self, targetRef)
 	triggerFatalError()
 EndEvent
+
+Function logStatus()
+	Chronicle:Logger:Engine:Updater.logStatus(self)
+EndFunction
 
 State CoreUpdate
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
+		logStatus()
 		
 		Chronicle:Package targetRef = getTargetPackage()
 		if (targetRef.canUpdate())
@@ -82,6 +91,7 @@ EndState
 State PackageUpdates
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
+		logStatus()
 		getEngine().getPackages().rewind(true)
 		processNextPackage()
 	EndEvent

@@ -103,9 +103,9 @@ Bool Function setCorePackage(Chronicle:Package packageRef)
 	endif
 
 	if (0 < PackageList.GetSize())
-		return addPackage(packageRef)
+		return false ; packageRef can't be the core package because there's already a package registered
 	else
-		return false
+		return addPackage(packageRef)
 	endif
 EndFunction
 
