@@ -61,3 +61,7 @@ EndFunction
 Bool Function logPhantomComponentFatalError(Chronicle:Engine engineRef, Chronicle:EngineComponent componentRef) Global
 	return error(engineRef + " received fatal error event from phantom component " + componentRef)
 EndFunction
+
+Bool Function logProcessComponent(Chronicle:EngineComponent componentRef) Global
+	return log(componentRef.getEngine() + " is processing component " + componentRef)
+EndFunction

@@ -1,6 +1,15 @@
 Scriptname Chronicle:Engine extends Quest
 {The central logic handler which controls all package management and collective installation / uninstallation behavior.}
 
+CustomEvent InstallerInitialized
+CustomEvent InstallerDecommissioned
+
+CustomEvent UpdaterInitialized
+CustomEvent UpdaterDecommissioned
+
+CustomEvent UninstallerInitialized
+CustomEvent UninstallerDecommissioned
+
 Group Environment
 	Chronicle:Package:Local Property CorePackage Auto Const Mandatory
 	{This is the core package for your plugin.  The engine needs to identify the core package for other packages in case they require a specific version.  The package this value holds is also unable to be installed under any circumstance.}
@@ -12,16 +21,25 @@ Group Environment
 	{The list of packages for purposes of managing and displaying them.}
 EndGroup
 
+Group Components
+	Chronicle:EngineComponent:Installer Property MyInstaller Auto Const Mandatory
+	Chronicle:EngineComponent:Updater Property MyUpdater Auto Const Mandatory
+	Chronicle:EngineComponent:Uninstaller Property MyUninstaller Auto Const Mandatory
+EndGroup
+
+Group Messaging
+	Message Property OldPackagesMessage Auto Const Mandatory
+	Message Property NewPackagesMessage Auto Const Mandatory
+	Message Property FatalErrorMessage Auto Const Mandatory
+	Message Property MissingPackagesMessage Auto Const Mandatory
+EndGroup
+
 String sStateDormant = "Dormant" Const
 String sStateSetup = "Setup" Const
 String sStateActive = "Active" Const
 String sStateTeardown = "Teardown" Const
 String sStateDecommissioned = "Decommissioned" Const
 String sStateFatalError = "FatalError" Const
-
-Bool bNeedsInstall = false
-Bool bNeedsUpdate = false
-Bool bNeedsUninstall = false
 
 Bool Function isAIOModeActive()
 	return AIOMode
@@ -39,65 +57,78 @@ Chronicle:PackageContainer Function getPackages()
 	return Packages
 EndFunction
 
-Group Components
-	Chronicle:EngineComponent:Installer Property MyInstaller Auto Const Mandatory
-	Chronicle:EngineComponent:Updater Property MyUpdater Auto Const Mandatory
-	Chronicle:EngineComponent:Uninstaller Property MyUninstaller Auto Const Mandatory
-EndGroup
-
-Group Messaging
-	Message Property OldPackagesMessage Auto Const Mandatory
-	Message Property NewPackagesMessage Auto Const Mandatory
-	Message Property FatalErrorMessage Auto Const Mandatory
-	Message Property MissingPackagesMessage Auto Const Mandatory
-EndGroup
-
 Chronicle:EngineComponent:Installer Function getInstaller()
 	return MyInstaller
+EndFunction
+
+Bool Function isInstallerReady()
+	return getInstaller().IsRunning()
+EndFunction
+
+Function initializeInstaller()
+	getInstaller().Start()
+	SendCustomEvent("InstallerInitialized")
+EndFunction
+
+Function decommissionInstaller()
+	SendCustomEvent("InstallerDecommissioned")
+	getInstaller().Stop()
 EndFunction
 
 Function installerIdled()
 	
 EndFunction
 
-Bool Function needsInstall()
-	return bNeedsInstall || getInstaller().isQueuePopulated()
-EndFunction
-
-Function setNeedsInstall(Bool bValue = true)
-	bNeedsInstall = bValue
-EndFunction
-
 Chronicle:EngineComponent:Updater Function getUpdater()
 	return MyUpdater
+EndFunction
+
+Bool Function isUpdaterReady()
+	return getUpdater().IsRunning()
+EndFunction
+
+Function initializeUpdater()
+	getUpdater().Start()
+	SendCustomEvent("UpdaterInitialized")
+EndFunction
+
+Function decommissionUpdater()
+	SendCustomEvent("UpdaterDecommissioned")
+	getUpdater().Stop()
 EndFunction
 
 Function updaterIdled()
 
 EndFunction
 
-Bool Function needsUpdate()
-	return bNeedsUpdate
-EndFunction
-
-Bool Function setNeedsUpdate(Bool bValue = true)
-	bNeedsUpdate = bValue
-EndFunction
-
 Chronicle:EngineComponent:Uninstaller Function getUninstaller()
 	return MyUninstaller
+EndFunction
+
+Bool Function isUninstallerReady()
+	return getUninstaller().IsRunning()
+EndFunction
+
+Function initializeUninstaller()
+	getUninstaller().Start()
+	SendCustomEvent("UninstallerInitialized")
+EndFunction
+
+Function decommissionUninstaller()
+	SendCustomEvent("UninstallerDecommissioned")
+	getUninstaller().Stop()
 EndFunction
 
 Function uninstallerIdled()
 
 EndFunction
 
-Bool Function needsUninstall()
-	return bNeedsInstall || getUninstaller().isQueuePopulated()
-EndFunction
-
-Function setNeedsUninstall(Bool bValue = true)
-	bNeedsUninstall = bValue
+Bool Function processComponent(Chronicle:EngineComponent componentRef)
+	if (componentRef.needsProcessing())
+		componentRef.process()
+	else
+		return false
+	endif
 EndFunction
 
 Function idleEventLogicLoop()
@@ -105,23 +136,15 @@ Function idleEventLogicLoop()
 		return
 	endif
 	
-	if (needsUpdate())
-		setNeedsUpdate(false)
-		getUpdater().process()
+	if (processComponent(getUpdater()))
 		return
 	endif
 	
-	Chronicle:EngineComponent:Installer installerRef = getInstaller()
-	if (needsInstall())
-		setNeedsInstall(false)
-		installerRef.process()
+	if (processComponent(getInstaller()))
 		return
 	endif
 	
-	Chronicle:EngineComponent:Uninstaller uninstallerRef = getUninstaller()
-	if (needsUninstall())
-		setNeedsUninstall(false)
-		uninstallerRef.process()
+	if (processComponent(getUninstaller()))
 		return
 	endif
 EndFunction
@@ -150,17 +173,12 @@ Function gameLoaded()
 	if (isIdle())
 		getUpdater().process()
 	else
-		setNeedsUpdate()
+		getUpdater().setNeedsProcessing()
 	endif
 EndFunction
 
 Bool Function queueForInstallLogic(Chronicle:Package packageRef)
-	Bool bResult = getInstaller().queuePackage(packageRef)
-	if (bResult)
-		bNeedsInstall = true
-	endif
-	
-	return bResult
+	return getInstaller().queuePackage(packageRef)
 EndFunction
 
 Bool Function installPackage(Chronicle:Package packageRef)
@@ -168,12 +186,7 @@ Bool Function installPackage(Chronicle:Package packageRef)
 EndFunction
 
 Bool Function queueForUninstallLogic(Chronicle:Package packageRef)
-	Bool bResult = getUninstaller().queuePackage(packageRef)
-	if (bResult)
-		bNeedsUninstall = true
-	endif
-
-	return bResult
+	return getUninstaller().queuePackage(packageRef)
 EndFunction
 
 Bool Function uninstallPackage(Chronicle:Package packageRef)
@@ -201,7 +214,7 @@ Event Chronicle:EngineComponent.Idled(Chronicle:EngineComponent componentRef, Va
 EndEvent
 
 Event Chronicle:EngineComponent.FatalError(Chronicle:EngineComponent componentRef, Var[] args)
-	if (getInstaller() != componentRef && getUpdater() != componentRef && getUninstaller() != componentRef)
+	if (getInstaller() == componentRef || getUpdater() == componentRef || getUninstaller() == componentRef)
 		Chronicle:Logger:Engine.logComponentFatalError(self, componentRef)
 	else
 		Chronicle:Logger:Engine.logPhantomComponentFatalError(self, componentRef)
@@ -263,7 +276,7 @@ EndState
 State Setup
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		getInstaller().Start()
+		initializeInstaller()
 	EndEvent
 	
 	Function installerIdled()
@@ -274,8 +287,8 @@ EndState
 State Active
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		getUpdater().Start()
-		getUninstaller().Start()
+		initializeUpdater()
+		initializeUninstaller()
 	EndEvent
 	
 	Function installerIdled()
@@ -291,21 +304,25 @@ State Active
 	EndFunction
 	
 	Bool Function installPackage(Chronicle:Package packageRef)
+		Chronicle:EngineComponent:Installer installerRef = getInstaller()
 		Bool bResult = queueForInstallLogic(packageRef)
-		
-		if (needsInstall() && isIdle())
-			getInstaller().process()
+	
+		if (installerRef.needsProcessing() && isIdle())
+			installerRef.process()
 		endif
 		
 		return bResult
 	EndFunction
 	
 	Bool Function uninstallPackage(Chronicle:Package packageRef)
+		Chronicle:EngineComponent:Uninstaller uninstallerRef = getUninstaller()
 		Bool bResult = queueForUninstallLogic(packageRef)
-		
-		if (needsUninstall() && isIdle())
-			getUninstaller().process()
+	
+		if (uninstallerRef.needsProcessing() && isIdle())
+			uninstallerRef.process()
 		endif
+		
+		return bResult
 	EndFunction
 	
 	Function uninstall()
@@ -317,9 +334,9 @@ State Teardown
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
 		if (isIdle())
-			getInstaller().Stop()
-			getUpdater().Stop()
-			getUninstaller().process(true)
+			decommissionInstaller()
+			decommissionUpdater()
+			getUninstaller().process()
 		endif
 	EndEvent
 	
@@ -328,21 +345,21 @@ State Teardown
 	EndFunction
 	
 	Function installerIdled()
-		getInstaller().Stop()
+		decommissionInstaller()
 		if (isIdle())
-			getUninstaller().process(true)
+			getUninstaller().process()
 		endif
 	EndFunction
 	
 	Function updaterIdled()
-		getUpdater().Stop()
+		decommissionUpdater()
 		if (isIdle())
-			getUninstaller().process(true)
+			getUninstaller().process()
 		endif
 	EndFunction
 	
 	Function uninstallerIdled()
-		getUninstaller().Stop()
+		decommissionUninstaller()
 		Stop()
 	EndFunction
 	
@@ -363,7 +380,6 @@ State Decommissioned
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
 		stopObservingComponents()
-		Stop()
 	EndEvent
 	
 	Bool Function installPackage(Chronicle:Package packageRef)
@@ -390,11 +406,23 @@ State FatalError
 		FatalErrorMessage.Show()
 	EndEvent
 	
+	Function triggerFatalError()
+		; prevents junk log messages and state changes
+	EndFunction
+	
+	Event OnQuestShutdown()
+		; prevents junk log messages and state changes
+	EndEvent
+	
 	Bool Function installPackage(Chronicle:Package packageRef)
 		return false
 	EndFunction
 
 	Bool Function uninstallPackage(Chronicle:Package packageRef)
 		return false
+	EndFunction
+	
+	Function gameLoaded()
+		; no point in responding to this
 	EndFunction
 EndState

@@ -6,23 +6,35 @@ String sStateCoreInstall = "CoreInstall" Const
 String sStateProcessQueue = "ProcessQueue" Const
 
 Function startupBehavior()
+	PackageQueue = new Chronicle:Package[0] ; because array variables initialize to None
 	GoToState(sStateCoreInstall)
 EndFunction
 
+Int Function getQueueSize()
+	if (None == PackageQueue)
+		return 0
+	endif
+	
+	return PackageQueue.Length
+EndFunction
+
 Bool Function isQueuePopulated()
-	return 0 < PackageQueue.Length
+	return 0 < getQueueSize()
 EndFunction
 
 Bool Function queuePackage(Chronicle:Package packageRef)
-	if (None == PackageQueue)
-		PackageQueue = new Chronicle:Package[0] ; because array variables initialize to None
+	if (!IsRunning()) ; because populating the queue (even after initializing it from None) and then starting the quest actually zeros out whatever is in the queue
+		return false
 	endif
 
-	;Chronicle:Logger:Engine.logPackageQueued(self, packageRef)
 	if (packageRef.canInstall())
 		PackageQueue.Add(packageRef)
+		Chronicle:Logger:Engine:Installer.logQueued(self, packageRef)
+		setNeedsProcessing()
+		logStatus()
 		return true
 	else
+		Chronicle:Logger:Engine:Installer.logCannotInstall(self, packageRef)
 		return false
 	endif
 EndFunction
@@ -31,22 +43,30 @@ Chronicle:Package Function getTargetPackage()
 	return None
 EndFunction
 
-Function process()
+Bool Function needsProcessing()
+	return parent.needsProcessing() || isQueuePopulated()
+EndFunction
+
+Function goToProcessingState()
 	GoToState(sStateProcessQueue)
 EndFunction
 
 Function observePackageInstall()
 	Chronicle:Package targetRef = getTargetPackage()
-	;Chronicle:Logger:Engine:Installer.logListeningForPackage(self, targetRef)
+	
 	RegisterForCustomEvent(targetRef, "InstallComplete")
 	RegisterForCustomEvent(targetRef, "InstallFailed")
+	
+	Chronicle:Logger:Engine:Installer.logListening(self, targetRef)
 EndFunction
 
 Function stopObservingPackageInstall()
 	Chronicle:Package targetRef = getTargetPackage()
-	;Chronicle:Logger:Engine.logStopListeningForPackageInstall(self, targetRef)
+	
 	UnregisterForCustomEvent(targetRef, "InstallComplete")
 	UnregisterForCustomEvent(targetRef, "InstallFailed")
+	
+	Chronicle:Logger:Engine:Installer.logStopListening(self, targetRef)
 EndFunction
 
 Bool Function addPackageToContainer(Chronicle:Package packageRef)
@@ -61,19 +81,23 @@ Function processNextPackage()
 
 EndFunction
 
+Function logStatus()
+	Chronicle:Logger:Engine:Installer.logStatus(self)
+EndFunction
+
 Event Chronicle:Package.InstallComplete(Chronicle:Package packageRef, Var[] args)
 	stopObservingPackageInstall()
 	
-	Chronicle:Package expectedRef = getTargetPackage()
-	if (expectedRef == packageRef)
-		if (addPackageToContainer(expectedRef))
+	Chronicle:Package targetRef = getTargetPackage()
+	if (targetRef == packageRef)
+		if (addPackageToContainer(targetRef))
 			postProcessingBehavior()
 		else
-			; message here
+			Chronicle:Logger:Engine:Installer.logNoAdd(self, targetRef)
 			triggerFatalError()
 		endif
 	else
-		;Chronicle:Logger:Engine:Installer.logPhantomPackageResponse(self, expectedRef, packageRef)
+		Chronicle:Logger:Engine:Installer.logPhantomResponse(self, targetRef, packageRef)
 		triggerFatalError()
 	endif
 EndEvent
@@ -83,10 +107,10 @@ Event Chronicle:Package.InstallFailed(Chronicle:Package packageRef, Var[] args)
 	
 	Chronicle:Package targetRef = getTargetPackage()
 	if (targetRef != packageRef)
-		;Chronicle:Logger:Engine.logPhantomPackageInstallResponse(self, CorePackage, packageRef)
+		Chronicle:Logger:Engine:Installer.logPhantomResponse(self, targetRef, packageRef)
 	endif
 	
-	;Chronicle:Logger:Engine.logPackageInstallFailed(self, targetRef)
+	Chronicle:Logger:Engine:Installer.logFailure(self, targetRef)
 	triggerFatalError()
 EndEvent
 
@@ -95,7 +119,7 @@ Function performPackageInstallation(Chronicle:Package packageRef)
 		observePackageInstall()
 		packageRef.Start()
 	else
-		; todo - error log
+		Chronicle:Logger:Engine:Installer.logCannotInstall(self, packageRef)
 		triggerFatalError()
 	endif
 EndFunction
@@ -103,9 +127,8 @@ EndFunction
 State CoreInstall
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		Chronicle:Package targetRef = getTargetPackage()
-		targetRef.GoToState("QueuedForInstallation") ; a hack, but this is what ends up needing to happen in order to match the normal package installation flow
-		performPackageInstallation(targetRef)
+		logStatus()
+		performPackageInstallation(getTargetPackage())
 	EndEvent
 	
 	Chronicle:Package Function getTargetPackage()
@@ -124,19 +147,24 @@ EndState
 State ProcessQueue
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
+		logStatus()
 		processNextPackage()
 	EndEvent
 	
 	Chronicle:Package Function getTargetPackage()
-		return PackageQueue[0]
+		if (isQueuePopulated())
+			return PackageQueue[0]
+		else
+			return None
+		endif
 	EndFunction
 	
 	Function processNextPackage()
 		Chronicle:Package targetRef = getTargetPackage()
-		if (targetRef)
-			performPackageInstallation(targetRef)
-		else
+		if (None == targetRef)
 			setToIdle()
+		else
+			performPackageInstallation(targetRef)
 		endif
 	EndFunction
 	
