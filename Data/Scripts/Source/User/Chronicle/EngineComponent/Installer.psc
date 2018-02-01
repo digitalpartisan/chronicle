@@ -82,7 +82,7 @@ Function processNextPackage()
 EndFunction
 
 Function logStatus()
-	Chronicle:Logger:Engine:Installer.logStatus(self)
+	;Chronicle:Logger:Engine:Installer.logStatus(self)
 EndFunction
 
 Event Chronicle:Package.InstallComplete(Chronicle:Package packageRef, Var[] args)

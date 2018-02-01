@@ -130,7 +130,7 @@ Function performPackageUninstallation(Chronicle:Package packageRef)
 EndFunction
 
 Function logStatus()
-	Chronicle:Logger:Engine:Uninstaller.logStatus(self)
+	;Chronicle:Logger:Engine:Uninstaller.logStatus(self)
 EndFunction
 
 State ProcessAll

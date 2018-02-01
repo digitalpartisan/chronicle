@@ -15,7 +15,7 @@ Group Environment
 	{This is the core package for your plugin.  The engine needs to identify the core package for other packages in case they require a specific version.  The package this value holds is also unable to be installed under any circumstance.}
 	Bool Property AIOMode = false Auto Const
 	{When set to true, packages which are marked as being in the AIO release cannot be uninstalled at any point.}
-	Chronicle:Version:Static Property MinimumRequiredCoreVersion Auto Const
+	Chronicle:Version:Static Property RequiredCompatabilityVersion Auto Const
 	{The minimum core version (i.e. the version of the core package}
 	Chronicle:PackageContainer Property Packages Auto Const Mandatory
 	{The list of packages for purposes of managing and displaying them.}
@@ -51,6 +51,15 @@ EndFunction
 
 Bool Function isCorePackage(Chronicle:Package packageRef)
 	return getCorePackage() == packageRef
+EndFunction
+
+Bool Function isPackageSupported(Chronicle:Package packageRef)
+	Chronicle:Version packageRequirement = packageRef.getCoreCompatibilityVersion()
+	return !packageRequirement || packageRequirement.notLessThan(getCorePackage().getVersionSetting())
+EndFunction
+
+Bool Function isPackageCompatible(Chronicle:Package packageRef)
+	return !RequiredCompatabilityVersion || packageRef.getVersionSetting().notLessThan(RequiredCompatabilityVersion)
 EndFunction
 
 Chronicle:PackageContainer Function getPackages()
@@ -149,8 +158,16 @@ Function idleEventLogicLoop()
 	endif
 EndFunction
 
+Bool Function canInstall()
+	return !IsRunning()
+EndFunction
+
+Function install()
+
+EndFunction
+
 Bool Function canUninstall()
-	return isIdle()
+	return IsRunning() && isIdle()
 EndFunction
 
 Function uninstall()
@@ -261,7 +278,7 @@ Auto State Dormant
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
 	EndEvent
-
+	
 	Event OnQuestInit()
 		if (getInstaller().isDormant() && getUpdater().isDormant() && getUninstaller().isDormant())
 			observeComponents()
@@ -271,6 +288,10 @@ Auto State Dormant
 			triggerFatalError()
 		endif
 	EndEvent
+	
+	Function install()
+		Start()
+	EndFunction
 EndState
 
 State Setup
@@ -389,6 +410,10 @@ State Decommissioned
 	Bool Function uninstallPackage(Chronicle:Package packageRef)
 		return false
 	EndFunction
+	
+	Bool Function canInstall()
+		return false
+	EndFunction
 EndState
 
 State FatalError
@@ -424,5 +449,9 @@ State FatalError
 	
 	Function gameLoaded()
 		; no point in responding to this
+	EndFunction
+	
+	Bool Function canInstall()
+		return false
 	EndFunction
 EndState

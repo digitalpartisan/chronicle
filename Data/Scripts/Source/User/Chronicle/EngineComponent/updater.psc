@@ -62,7 +62,7 @@ Event Chronicle:Package.UpdateFailed(Chronicle:Package packageRef, Var[] args)
 EndEvent
 
 Function logStatus()
-	Chronicle:Logger:Engine:Updater.logStatus(self)
+	;Chronicle:Logger:Engine:Updater.logStatus(self)
 EndFunction
 
 State CoreUpdate
