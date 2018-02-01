@@ -3,8 +3,10 @@ Scriptname Chronicle:Package extends Quest Hidden Conditional
 
 CustomEvent InstallComplete
 CustomEvent InstallFailed
+
 CustomEvent UpdateComplete
 CustomEvent UpdateFailed
+
 CustomEvent UninstallComplete
 CustomEvent UninstallFailed
 
@@ -18,21 +20,21 @@ EndGroup
 Group Environment
 	Bool Property InAIO = false Auto Const
 	{Set this to true if this package will be included in some sort of All-in-One package so that it cannot be uninstalled.}
-	Chronicle:Version:Static Property RequiredCoreVersion Auto Const
-	{If this package requires a particular version of the base package (see the Chronicle:Engine script for details)}
+	Chronicle:Version:Static Property CoreCompatibilityVersion Auto Const
+	{The minimum version of the Core package, if any, this package requires to function.  See the Chronicle:Engine script for details.}
 EndGroup
 
 Group Messaging
-	Message Property InstallationMessage Auto Const Mandatory
-	{Shown to the player when this package is installed.}
-	Message Property UpdateMessage Auto Const Mandatory
-	{Shown to the player when this package is updated.}
-	Message Property UninstallationMessage Auto Const Mandatory
-	{Shown to the player when this package is uninstalled.}
+	Message Property InstallationMessage Auto Const
+	{Shown to the player when this package is installed, provided it is set.}
+	Message Property UpdateMessage Auto Const
+	{Shown to the player when this package is updated, provided it is set.}
+	Message Property UninstallationMessage Auto Const
+	{Shown to the player when this package is uninstalled, provided it is set.}
 	Message Property Description Auto Const Mandatory
-	{Used to explain the functionality of this package to the user should it be needed.}
-	Message Property FatalErrorMessage Auto Const Mandatory
-	{Used when something catastrophic happens so that the user knows the package has shut itself down.}
+	{Used to explain the functionality of this package to the user when it is needed.  Required because this option really should be available.}
+	Message Property FatalErrorMessage Auto Const
+	{Used when something catastrophic happens so that the user knows the package has shut itself down, provided it is set.}
 EndGroup
 
 Chronicle:Version:Static NextUpdate = None
@@ -63,8 +65,8 @@ Chronicle:Version:Static Function getVersionSetting()
 	return VersionSetting
 EndFunction
 
-Chronicle:Version Function getRequiredCoreVersion()
-	return RequiredCoreVersion
+Chronicle:Version Function getCoreCompatibilityVersion()
+	return CoreCompatibilityVersion
 EndFunction
 
 Bool Function hasValidVersionSetting()
@@ -112,6 +114,10 @@ Bool Function isCurrent()
 EndFunction
 
 Bool Function requestInstallation()
+	return false
+EndFunction
+
+Bool Function requestUninstallation()
 	return false
 EndFunction
 
@@ -239,6 +245,15 @@ State Idle
 	Event OnQuestShutdown()
 		GoToState(sStateFatalError)
 	EndEvent
+	
+	Bool Function requestUninstallation()
+		if (getEngine().uninstallPackage(self))
+			return true
+		else
+			Chronicle:Logger:Package.logCannotUninstall(self)
+			return false
+		endif
+	EndFunction
 EndState
 
 State Updating

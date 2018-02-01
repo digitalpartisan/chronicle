@@ -14,6 +14,10 @@ FormList Function getPackageList()
 	return PackageList
 EndFunction
 
+Int Function getCount()
+	return PackageList.GetSize()
+EndFunction
+
 Bool Function passesIntegrityCheck()
 	Int iCounter = 0
 	Int iSize = PackageList.GetSize()

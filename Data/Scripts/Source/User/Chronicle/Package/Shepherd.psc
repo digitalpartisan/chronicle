@@ -17,7 +17,7 @@ Function attemptInstallation()
 	endif
 	
 	if (MyPackage.requestInstallation())
-		Chronicle:Logger:Package.logShepherdQueuePackage(self)
+		;Chronicle:Logger:Package.logShepherdQueuePackage(self)
 		Stop()
 		return
 	endif

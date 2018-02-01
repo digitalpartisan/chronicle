@@ -42,6 +42,10 @@ Bool Function logCannotInstall(Chronicle:Package packageRef) Global
 	return log(packageRef + " is unable to install at this time")
 EndFunction
 
+Bool Function logCannotUninstall(Chronicle:Package packageRef) Global
+	return log(packageRef + " is unable to uninstall at this time")
+EndFunction
+
 Bool Function logSetupStateUnableToInstall(Chronicle:Package packageRef) Global
 	return log(packageRef + " made it into the setup state but cannot install")
 EndFunction
