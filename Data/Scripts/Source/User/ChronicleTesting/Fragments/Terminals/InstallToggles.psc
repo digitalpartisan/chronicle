@@ -4,7 +4,7 @@ Scriptname ChronicleTesting:Fragments:Terminals:InstallToggles Extends Terminal 
 ;BEGIN FRAGMENT Fragment_Terminal_01
 Function Fragment_Terminal_01(ObjectReference akTerminalRef)
 ;BEGIN CODE
-ChronicleTesting0Install4ConditionToggle.SetValue(1.0)
+ChronicleTesting_0Install_4PackageConditions_Toggle.SetValue(1.0)
 ;END CODE
 EndFunction
 ;END FRAGMENT
