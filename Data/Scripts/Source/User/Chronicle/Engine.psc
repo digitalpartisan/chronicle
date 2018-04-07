@@ -17,14 +17,14 @@ Group Environment
 	{When set to true, packages which are marked as being in the AIO release cannot be uninstalled at any point.}
 	Chronicle:Version:Static Property RequiredCompatabilityVersion Auto Const
 	{The minimum core version (i.e. the version of the core package}
-	Chronicle:PackageContainer Property Packages Auto Const Mandatory
+	Chronicle:Package:Container Property Packages Auto Const Mandatory
 	{The list of packages for purposes of managing and displaying them.}
 EndGroup
 
 Group Components
-	Chronicle:EngineComponent:Installer Property MyInstaller Auto Const Mandatory
-	Chronicle:EngineComponent:Updater Property MyUpdater Auto Const Mandatory
-	Chronicle:EngineComponent:Uninstaller Property MyUninstaller Auto Const Mandatory
+	Chronicle:Engine:Component:Installer Property MyInstaller Auto Const Mandatory
+	Chronicle:Engine:Component:Updater Property MyUpdater Auto Const Mandatory
+	Chronicle:Engine:Component:Uninstaller Property MyUninstaller Auto Const Mandatory
 EndGroup
 
 Group Messaging
@@ -62,11 +62,11 @@ Bool Function isPackageCompatible(Chronicle:Package packageRef)
 	return !RequiredCompatabilityVersion || packageRef.getVersionSetting().notLessThan(RequiredCompatabilityVersion)
 EndFunction
 
-Chronicle:PackageContainer Function getPackages()
+Chronicle:Package:Container Function getPackages()
 	return Packages
 EndFunction
 
-Chronicle:EngineComponent:Installer Function getInstaller()
+Chronicle:Engine:Component:Installer Function getInstaller()
 	return MyInstaller
 EndFunction
 
@@ -88,7 +88,7 @@ Function installerIdled()
 	
 EndFunction
 
-Chronicle:EngineComponent:Updater Function getUpdater()
+Chronicle:Engine:Component:Updater Function getUpdater()
 	return MyUpdater
 EndFunction
 
@@ -110,7 +110,7 @@ Function updaterIdled()
 
 EndFunction
 
-Chronicle:EngineComponent:Uninstaller Function getUninstaller()
+Chronicle:Engine:Component:Uninstaller Function getUninstaller()
 	return MyUninstaller
 EndFunction
 
@@ -132,7 +132,7 @@ Function uninstallerIdled()
 
 EndFunction
 
-Bool Function processComponent(Chronicle:EngineComponent componentRef)
+Bool Function processComponent(Chronicle:Engine:Component componentRef)
 	if (componentRef.needsProcessing())
 		componentRef.process()
 	else
@@ -214,7 +214,7 @@ Bool Function isIdle()
 	return getInstaller().isIdle() && getUpdater().isIdle() && getUninstaller().isIdle()
 EndFunction
 
-Event Chronicle:EngineComponent.Idled(Chronicle:EngineComponent componentRef, Var[] args)
+Event Chronicle:Engine:Component.Idled(Chronicle:Engine:Component componentRef, Var[] args)
 	if (getInstaller() == componentRef)
 		Chronicle:Logger:Engine.logIdledInstaller(self)
 		installerIdled()
@@ -230,7 +230,7 @@ Event Chronicle:EngineComponent.Idled(Chronicle:EngineComponent componentRef, Va
 	endif
 EndEvent
 
-Event Chronicle:EngineComponent.FatalError(Chronicle:EngineComponent componentRef, Var[] args)
+Event Chronicle:Engine:Component.FatalError(Chronicle:Engine:Component componentRef, Var[] args)
 	if (getInstaller() == componentRef || getUpdater() == componentRef || getUninstaller() == componentRef)
 		Chronicle:Logger:Engine.logComponentFatalError(self, componentRef)
 	else
@@ -240,13 +240,13 @@ Event Chronicle:EngineComponent.FatalError(Chronicle:EngineComponent componentRe
 	triggerFatalError()
 EndEvent
 
-Function observeComponent(Chronicle:EngineComponent componentRef)
+Function observeComponent(Chronicle:Engine:Component componentRef)
 	Chronicle:Logger:Engine.logObservingComponent(self, componentRef)
 	RegisterForCustomEvent(componentRef, "Idled")
 	RegisterForCustomEvent(componentRef, "FatalError")
 EndFunction
 
-Function stopObservingComponent(Chronicle:EngineComponent componentRef)
+Function stopObservingComponent(Chronicle:Engine:Component componentRef)
 	Chronicle:Logger:Engine.logStopObservingComponent(self, componentRef)
 	UnregisterForCustomEvent(componentRef, "Idled")
 	UnregisterForCustomEvent(componentRef, "FatalError")
@@ -325,7 +325,7 @@ State Active
 	EndFunction
 	
 	Bool Function installPackage(Chronicle:Package packageRef)
-		Chronicle:EngineComponent:Installer installerRef = getInstaller()
+		Chronicle:Engine:Component:Installer installerRef = getInstaller()
 		Bool bResult = queueForInstallLogic(packageRef)
 	
 		if (installerRef.needsProcessing() && isIdle())
@@ -336,7 +336,7 @@ State Active
 	EndFunction
 	
 	Bool Function uninstallPackage(Chronicle:Package packageRef)
-		Chronicle:EngineComponent:Uninstaller uninstallerRef = getUninstaller()
+		Chronicle:Engine:Component:Uninstaller uninstallerRef = getUninstaller()
 		Bool bResult = queueForUninstallLogic(packageRef)
 	
 		if (uninstallerRef.needsProcessing() && isIdle())
@@ -422,9 +422,9 @@ State FatalError
 		
 		stopObservingComponents()
 		
-		getInstaller().triggerFatalError()
-		getUpdater().triggerFatalError()
-		getUninstaller().triggerFatalError()
+		getInstaller().sendFatalError()
+		getUpdater().sendFatalError()
+		getUninstaller().sendFatalError()
 		
 		Stop()
 		

@@ -1,4 +1,4 @@
-Scriptname Chronicle:LoadDetection:Package extends ReferenceAlias
+Scriptname Chronicle:Package:Shepherd:LoadDetector extends ReferenceAlias
 
 Chronicle:Package:Shepherd Property MyShepherd Auto Const Mandatory
 

@@ -1,9 +1,10 @@
-Scriptname Chronicle:EngineComponent:Updater extends Chronicle:EngineComponent
+Scriptname Chronicle:Engine:Component:Updater extends Chronicle:Engine:Component
 
 String sStateCoreUpdate = "CoreUpdate" Const
 String sStatePackageUpdates = "PackageUpdates" Const
 
 Chronicle:Package Function getTargetPackage()
+{This is here because the compiler kicks up an internal error otherwise.}
 	return None
 EndFunction
 
@@ -13,7 +14,7 @@ Function observePackageUpdate()
 	RegisterForCustomEvent(targetRef, "UpdateComplete")
 	RegisterForCustomEvent(targetRef, "UpdateFailed")
 	
-	Chronicle:Logger:Engine:Updater.logListening(self, targetRef)
+	Chronicle:Logger:Engine:Component.logListening(self, targetRef)
 EndFunction
 
 Function stopObservingPackageUpdate()
@@ -22,19 +23,15 @@ Function stopObservingPackageUpdate()
 	UnregisterForCustomEvent(targetRef, "UpdateComplete")
 	UnregisterForCustomEvent(targetRef, "UpdateFailed")
 	
-	Chronicle:Logger:Engine:Updater.logStopListening(self, targetRef)
-EndFunction
-
-Function postProcessingBehavior()
-	
-EndFunction
-
-Function processNextPackage()
-	
+	Chronicle:Logger:Engine:Component.logStopListening(self, targetRef)
 EndFunction
 
 Function goToProcessingState()
 	GoToState(sStateCoreUpdate)
+EndFunction
+
+Bool Function canActOnPackage(Chronicle:Package targetPackage)
+	return targetPackage.canUpdate()
 EndFunction
 
 Event Chronicle:Package.UpdateComplete(Chronicle:Package packageRef, Var[] args)
@@ -44,8 +41,8 @@ Event Chronicle:Package.UpdateComplete(Chronicle:Package packageRef, Var[] args)
 	if (targetRef == packageRef)
 		postProcessingBehavior()
 	else
-		Chronicle:Logger:Engine:Updater.logPhantomResponse(self, targetRef, packageRef)
-		triggerFatalError()
+		Chronicle:Logger:Engine:Component.logPhantomResponse(self, targetRef, packageRef)
+		sendFatalError()
 	endif
 EndEvent
 
@@ -54,16 +51,12 @@ Event Chronicle:Package.UpdateFailed(Chronicle:Package packageRef, Var[] args)
 	
 	Chronicle:Package targetRef = getTargetPackage()
 	if (targetRef != packageRef)
-		Chronicle:Logger:Engine:Updater.logPhantomResponse(self, targetRef, packageRef)
+		Chronicle:Logger:Engine:Component.logPhantomResponse(self, targetRef, packageRef)
 	endif
 	
-	Chronicle:Logger:Engine:Updater.logFailure(self, targetRef)
-	triggerFatalError()
+	;Chronicle:Logger:Engine:Component.logFailure(self, targetRef)
+	sendFatalError()
 EndEvent
-
-Function logStatus()
-	;Chronicle:Logger:Engine:Updater.logStatus(self)
-EndFunction
 
 State CoreUpdate
 	Event OnBeginState(String asOldState)
@@ -92,7 +85,7 @@ State PackageUpdates
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
 		logStatus()
-		getEngine().getPackages().rewind(true)
+		getEngine().getPackages().rewind(true) ; set the pointer to the 
 		processNextPackage()
 	EndEvent
 	
