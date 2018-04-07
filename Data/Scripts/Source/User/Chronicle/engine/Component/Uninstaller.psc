@@ -1,45 +1,10 @@
-Scriptname Chronicle:EngineComponent:Uninstaller extends Chronicle:EngineComponent
-
-Chronicle:Package[] PackageQueue
+Scriptname Chronicle:Engine:Component:Uninstaller extends Chronicle:Engine:Component
 
 String sStateProcessAll = "ProcessAll" Const
 String sStateProcessQueue = "ProcessQueue" Const
 
-Function startupBehavior()
-	PackageQueue = new Chronicle:Package[0] ; because array variables initialize to None
-	parent.startupBehavior()
-EndFunction
-
-Bool Function getQueueSize()
-	if (None == PackageQueue)
-		return 0
-	else
-		return PackageQueue.Length
-	endif
-EndFunction
-
-Bool Function isQueuePopulated()
-	return 0 < getQueueSize()
-EndFunction
-
-Bool Function queuePackage(Chronicle:Package packageRef)
-	if (!IsRunning()) ; see note in Chronicle:EngineComponent:Installer.queuePackage()
-		return false
-	endif
-
-	if (packageRef.canUninstall())
-		PackageQueue.Add(packageRef)
-		Chronicle:Logger:Engine:Uninstaller.logQueued(self, packageRef)
-		setNeedsProcessing()
-		logStatus()
-		return true
-	else
-		Chronicle:Logger:Engine:Uninstaller.logCannotUninstall(self, packageRef)
-		return false
-	endif
-EndFunction
-
 Chronicle:Package Function getTargetPackage()
+{This is here because the compiler kicks up an internal error otherwise.}
 	return None
 EndFunction
 
@@ -51,8 +16,8 @@ Function goToProcessingState()
 	endif
 EndFunction
 
-Bool Function needsProcessing()
-	return parent.needsProcessing() || isQueuePopulated()
+Bool Function canActOnPackage(Chronicle:Package targetPackage)
+	return targetPackage.canUninstall()
 EndFunction
 
 Function observePackageUninstall()
@@ -61,7 +26,7 @@ Function observePackageUninstall()
 	RegisterForCustomEvent(targetRef, "UninstallComplete")
 	RegisterForCustomEvent(targetRef, "UninstallFailed")
 	
-	Chronicle:Logger:Engine:Uninstaller.logListening(self, targetRef)
+	Chronicle:Logger:Engine:Component.logListening(self, targetRef)
 EndFunction
 
 Function stopObservingPackageUninstall()
@@ -70,15 +35,11 @@ Function stopObservingPackageUninstall()
 	UnregisterForCustomEvent(targetRef, "UninstallComplete")
 	UnregisterForCustomEvent(targetRef, "UninstallFailed")
 	
-	Chronicle:Logger:Engine:Uninstaller.logStopListening(self, targetRef)
+	Chronicle:Logger:Engine:Component.logStopListening(self, targetRef)
 EndFunction
 
 Bool Function removePackageFromContainer(Chronicle:Package packageRef)
 	return false
-EndFunction
-
-Function postProcessingBehavior()
-	
 EndFunction
 
 Function processNextPackage()
@@ -98,12 +59,12 @@ Event Chronicle:Package.UninstallComplete(Chronicle:Package packageRef, Var[] ar
 		if (removePackageFromContainer(targetRef))
 			postProcessingBehavior()
 		else
-			Chronicle:Logger:Engine:Uninstaller.logNoRemove(self, targetRef)
-			triggerFatalError()
+			;Chronicle:Logger:Engine:Component.logNoRemove(self, targetRef)
+			sendFatalError()
 		endif
 	else
-		Chronicle:Logger:Engine:Uninstaller.logPhantomResponse(self, targetRef, packageRef)
-		triggerFatalError()
+		Chronicle:Logger:Engine:Component.logPhantomResponse(self, targetRef, packageRef)
+		sendFatalError()
 	endif
 EndEvent
 
@@ -112,11 +73,11 @@ Event Chronicle:Package.UninstallFailed(Chronicle:Package packageRef, Var[] args
 	
 	Chronicle:Package targetRef = getTargetPackage()
 	if (targetRef != packageRef)
-		Chronicle:Logger:Engine:Uninstaller.logPhantomResponse(self, targetRef, packageRef)
+		Chronicle:Logger:Engine:Component.logPhantomResponse(self, targetRef, packageRef)
 	endif
 	
-	Chronicle:Logger:Engine:Uninstaller.logFailure(self, targetRef)
-	triggerFatalError()
+	;Chronicle:Logger:Engine:Component.logFailure(self, targetRef)
+	sendFatalError()
 EndEvent
 
 Function performPackageUninstallation(Chronicle:Package packageRef)
@@ -124,20 +85,16 @@ Function performPackageUninstallation(Chronicle:Package packageRef)
 		observePackageUninstall()
 		packageRef.Stop()
 	else
-		Chronicle:Logger:Engine:Uninstaller.logCannotUninstall(self, packageRef)
-		triggerFatalError()
+		;;Chronicle:Logger:Engine:Component.logCannotUninstall(self, packageRef)
+		sendFatalError()
 	endif
-EndFunction
-
-Function logStatus()
-	;Chronicle:Logger:Engine:Uninstaller.logStatus(self)
 EndFunction
 
 State ProcessAll
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
 		logStatus()
-		getEngine().getPackages().fastForward()
+		getEngine().getPackages().fastForward() ; start at the end of the package list
 		processNextPackage()
 	EndEvent
 	
@@ -163,7 +120,7 @@ State ProcessQueue
 	
 	Chronicle:Package Function getTargetPackage()
 		if (isQueuePopulated())
-			return PackageQueue[0]
+			return getPackageQueue()[0]
 		else
 			return None
 		endif
@@ -174,7 +131,7 @@ State ProcessQueue
 	EndFunction
 	
 	Function postProcessingBehavior()
-		PackageQueue.Remove(0)
+		getPackageQueue().Remove(0)
 		processNextPackage()
 	EndFunction
 EndState

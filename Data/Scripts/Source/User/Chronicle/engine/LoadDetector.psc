@@ -1,4 +1,4 @@
-Scriptname Chronicle:LoadDetection extends ReferenceAlias
+Scriptname Chronicle:Engine:LoadDetector extends ReferenceAlias
 
 Chronicle:Engine Property MyEngine Auto Const Mandatory
 
