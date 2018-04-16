@@ -4,7 +4,7 @@ String sStateCoreInstall = "CoreInstall" Const
 String sStateProcessQueue = "ProcessQueue" Const
 
 Chronicle:Package Function getTargetPackage()
-{This is here because the compiler kicks up an internal error otherwise.}
+{This is here because the compiler kicks up an internal error otherwise even though it's defined in the parent script.  Oh well.}
 	return None
 EndFunction
 

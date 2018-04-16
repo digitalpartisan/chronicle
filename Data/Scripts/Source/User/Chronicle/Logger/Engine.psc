@@ -50,6 +50,10 @@ Bool Function logIdledUninstaller(Chronicle:Engine engineRef) Global
 	return log(engineRef + " received idle event from uninstaller component")
 EndFunction
 
+Bool Function logIdledPostload(Chronicle:Engine engineRef) Global
+	return log(engineRef + " received idle event from postload component")
+EndFunction
+
 Bool Function logPhantomComponentIdled(Chronicle:Engine engineRef, Chronicle:Engine:Component componentRef) Global
 	return error(engineRef + " received idle event from phantom component " + componentRef)
 EndFunction

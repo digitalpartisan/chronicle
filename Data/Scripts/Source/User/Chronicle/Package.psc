@@ -35,6 +35,10 @@ Group Messaging
 	{Used to explain the functionality of this package to the user when it is needed.  Required because this option really should be available.}
 	Message Property FatalErrorMessage Auto Const
 	{Used when something catastrophic happens so that the user knows the package has shut itself down, provided it is set.}
+	Message Property TooOldMessage Auto Const
+	{The message displayed when this package's CoreCompatibilityVersion value is below the engine's required version.  I.e. what to tell the player when the mod providing this package isn't up to date.}
+	Message Property TooNewMessage Auto Const
+	{The message displayed when this package's CoreCompatibilityVersion value is higher than the Core Package's version setting.  I.e. what to tell the player when the mod providing the core package isn't up to date.}
 EndGroup
 
 Chronicle:Version:Static NextUpdate = None
@@ -92,13 +96,18 @@ Bool Function customInstallationBehavior()
 	return true
 EndFunction
 
+Bool Function customPostloadBehavior()
+{Override this function in child scripts to specify unique post-load tasks.}
+	return true
+EndFunction
+
 Bool Function customUninstallationBehavior()
 {Override this function in child scripts to specify unique uninstallation tasks.}
 	return true
 EndFunction
 
 Bool Function canInstallLogic()
-	return hasValidVersionSetting() && !isInstalled() && meetsCustomInstallationConditions()
+	return hasValidVersionSetting() && !isInstalled() && meetsCustomInstallationConditions() && getEngine().isPackageCompatible(self)
 EndFunction
 
 Bool Function canInstall()
@@ -211,11 +220,11 @@ State Setup
 			return
 		endif
 		
-		SendCustomEvent("InstallComplete")
-		
 		if (InstallationMessage)
 			InstallationMessage.Show()
 		endif
+		
+		SendCustomEvent("InstallComplete")
 		
 		GoToState(sStateIdle)
 	EndEvent
@@ -227,7 +236,7 @@ State Idle
 	EndEvent
 	
 	Bool Function canUpdate()
-		return isInstalled() && !isCurrent()
+		return isInstalled() && !isCurrent() && getEngine().isPackageCompatible(self)
 	EndFunction
 	
 	Bool Function isIdle()

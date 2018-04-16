@@ -10,13 +10,16 @@ CustomEvent UpdaterDecommissioned
 CustomEvent UninstallerInitialized
 CustomEvent UninstallerDecommissioned
 
+CustomEvent PostloadInitialized
+CustomEvent PostloadDecommissioned
+
 Group Environment
 	Chronicle:Package:Local Property CorePackage Auto Const Mandatory
 	{This is the core package for your plugin.  The engine needs to identify the core package for other packages in case they require a specific version.  The package this value holds is also unable to be installed under any circumstance.}
 	Bool Property AIOMode = false Auto Const
 	{When set to true, packages which are marked as being in the AIO release cannot be uninstalled at any point.}
-	Chronicle:Version:Static Property RequiredCompatabilityVersion Auto Const
-	{The minimum core version (i.e. the version of the core package}
+	Chronicle:Version:Static Property RequiredCompatibilityVersion Auto Const
+	{Setting this value will require all non-core packages to have a CoreCompatibilityVersion property setting of at least this value in order to install or update.}
 	Chronicle:Package:Container Property Packages Auto Const Mandatory
 	{The list of packages for purposes of managing and displaying them.}
 EndGroup
@@ -25,6 +28,7 @@ Group Components
 	Chronicle:Engine:Component:Installer Property MyInstaller Auto Const Mandatory
 	Chronicle:Engine:Component:Updater Property MyUpdater Auto Const Mandatory
 	Chronicle:Engine:Component:Uninstaller Property MyUninstaller Auto Const Mandatory
+	Chronicle:Engine:Component:Postload Property MyPostload Auto Const Mandatory
 EndGroup
 
 Group Messaging
@@ -41,6 +45,11 @@ String sStateTeardown = "Teardown" Const
 String sStateDecommissioned = "Decommissioned" Const
 String sStateFatalError = "FatalError" Const
 
+; safeguards against spamming the player with these messages more than once per game load
+Bool bShownMissingPackagesMessage = false
+Bool bShownTooOldMessage = false
+Bool bShownTooNewMessage = false
+
 Bool Function isAIOModeActive()
 	return AIOMode
 EndFunction
@@ -53,13 +62,70 @@ Bool Function isCorePackage(Chronicle:Package packageRef)
 	return getCorePackage() == packageRef
 EndFunction
 
-Bool Function isPackageSupported(Chronicle:Package packageRef)
-	Chronicle:Version packageRequirement = packageRef.getCoreCompatibilityVersion()
-	return !packageRequirement || packageRequirement.notLessThan(getCorePackage().getVersionSetting())
+Bool Function isPackageTooOld(Chronicle:Package packageRef)
+{Returns true if the given package's core compatibility version doesn't meet the minimum value required by this engine and false otherwise.
+TLDR: The given package needs to be updated in order to remain compatible with the plugin using this library.}
+	if (isCorePackage(packageRef)) ; Core package is never too old
+		return false
+	endif
+	
+	if (None == RequiredCompatibilityVersion) ; no enforcable minimum, so no such thing as too old
+		return false
+	endif
+	
+	Chronicle:Version packageCompatibilityVersion = packageRef.getCoreCompatibilityVersion()
+	if (None == packageCompatibilityVersion) ; too old by default because the required value isn't even set (let alone large enough)
+		return true
+	endif
+	
+	return RequiredCompatibilityVersion.greaterThan(packageCompatibilityVersion)
+EndFunction
+
+Bool Function isPackageTooNew(Chronicle:Package packageRef)
+{Returns true if the given package's core compatibility version is newer than the core package's version and false otherwise.
+TLDR: the given package is intended to run against a newer version of the core package.  Core needs updated even if it is never "too old."}
+	if (isCorePackage(packageRef)) ; Core package is never too new
+		return false
+	endif
+	
+	Chronicle:Version packageCompatibilityVersion = packageRef.getCoreCompatibilityVersion()
+	if (None == packageCompatibilityVersion) ; package has no requirement, so any core version is acceptable
+		return false
+	endif
+	
+	return packageCompatibilityVersion.greaterThan(getCorePackage().getVersionSetting()) ; use the version setting in case not all core upgrades have taken place yet
+EndFunction
+
+Function notifyTooOld(Chronicle:Package packageRef)
+	if (packageRef.TooOldMessage)
+		packageRef.TooOldMessage.Show()
+	elseif (!bShownTooOldMessage)
+		bShownTooOldMessage = true
+		OldPackagesMessage.Show()
+	endif
+EndFunction
+
+Function notifyTooNew(Chronicle:Package packageRef)
+	if (packageRef.TooNewMessage)
+		packageRef.TooNewMessage.Show()
+	elseif (!bShownTooNewMessage)
+		bShownTooNewMessage = true
+		NewPackagesMessage.Show()
+	endif
 EndFunction
 
 Bool Function isPackageCompatible(Chronicle:Package packageRef)
-	return !RequiredCompatabilityVersion || packageRef.getVersionSetting().notLessThan(RequiredCompatabilityVersion)
+	if (isPackageTooOld(packageRef))
+		notifyTooOld(packageRef)
+		return false
+	endif
+	
+	if (isPackageTooNew(packageRef))
+		notifyTooNew(packageRef)
+		return false
+	endif
+	
+	return true
 EndFunction
 
 Chronicle:Package:Container Function getPackages()
@@ -132,6 +198,28 @@ Function uninstallerIdled()
 
 EndFunction
 
+Chronicle:Engine:Component:Postload Function getPostload()
+	return MyPostload
+EndFunction
+
+Bool Function isPostloadReady()
+	return getPostload().IsRunning()
+EndFunction
+
+Function initializePostload()
+	getPostload().Start()
+	SendCustomEvent("Postloadinitialized")
+EndFunction
+
+Function decommissionPostload()
+	SendCustomEvent("PostloadDecommissioned")
+	getPostload().Stop()
+EndFunction
+
+Function postloadIdled()
+
+EndFunction
+
 Bool Function processComponent(Chronicle:Engine:Component componentRef)
 	if (componentRef.needsProcessing())
 		componentRef.process()
@@ -145,6 +233,10 @@ Function idleEventLogicLoop()
 		return
 	endif
 	
+	; these component calls are listed in the order of preference once the engine is initialized and a game is loaded.
+	; the updates should run first since it is possible that ongoing problems are corrected therein.
+	; the postload behavior should run last because it is the least likely to affect critical functionality and it does not need to be thread safe
+	
 	if (processComponent(getUpdater()))
 		return
 	endif
@@ -154,6 +246,10 @@ Function idleEventLogicLoop()
 	endif
 	
 	if (processComponent(getUninstaller()))
+		return
+	endif
+	
+	if (processComponent(getPostload()))
 		return
 	endif
 EndFunction
@@ -171,7 +267,7 @@ Bool Function canUninstall()
 EndFunction
 
 Function uninstall()
-	
+
 EndFunction
 
 Function triggerFatalError()
@@ -181,8 +277,14 @@ EndFunction
 Function gameLoaded()
 	Chronicle:Logger:Engine.interceptedGameLoad(self)
 	
-	if (!Packages.passesIntegrityCheck())
+	; only show the generic messages once per load
+	bShownMissingPackagesMessage = false
+	bShownTooOldMessage = false
+	bShownTooNewMessage = false
+	
+	if (!Packages.passesIntegrityCheck() && !bShownMissingPackagesMessage)
 		; log message
+		bShownMissingPackagesMessage = true
 		MissingPackagesMessage.Show()
 		triggerFatalError()
 	endif
@@ -192,6 +294,8 @@ Function gameLoaded()
 	else
 		getUpdater().setNeedsProcessing()
 	endif
+	
+	getPostload().setNeedsProcessing()
 EndFunction
 
 Bool Function queueForInstallLogic(Chronicle:Package packageRef)
@@ -224,6 +328,9 @@ Event Chronicle:Engine:Component.Idled(Chronicle:Engine:Component componentRef, 
 	elseif (getUninstaller() == componentRef)
 		Chronicle:Logger:Engine.logIdledUninstaller(self)
 		uninstallerIdled()
+	elseif (getPostload() == componentRef)
+		Chronicle:Logger:Engine.logIdledPostload(self)
+		postloadIdled()
 	else
 		Chronicle:Logger:Engine.logPhantomComponentIdled(self, componentRef)
 		triggerFatalError()
@@ -231,7 +338,7 @@ Event Chronicle:Engine:Component.Idled(Chronicle:Engine:Component componentRef, 
 EndEvent
 
 Event Chronicle:Engine:Component.FatalError(Chronicle:Engine:Component componentRef, Var[] args)
-	if (getInstaller() == componentRef || getUpdater() == componentRef || getUninstaller() == componentRef)
+	if (getInstaller() == componentRef || getUpdater() == componentRef || getUninstaller() == componentRef || getPostload() == componentRef)
 		Chronicle:Logger:Engine.logComponentFatalError(self, componentRef)
 	else
 		Chronicle:Logger:Engine.logPhantomComponentFatalError(self, componentRef)
@@ -256,12 +363,14 @@ Function observeComponents()
 	observeComponent(getInstaller())
 	observeComponent(getUpdater())
 	observeComponent(getUninstaller())
+	observeComponent(getPostload())
 EndFunction
 
 Function stopObservingComponents()
 	stopObservingComponent(getInstaller())
 	stopObservingComponent(getUpdater())
 	stopObservingComponent(getUninstaller())
+	stopObservingComponent(getPostload())
 EndFunction
 
 Event OnQuestInit()
@@ -280,7 +389,7 @@ Auto State Dormant
 	EndEvent
 	
 	Event OnQuestInit()
-		if (getInstaller().isDormant() && getUpdater().isDormant() && getUninstaller().isDormant())
+		if (getInstaller().isDormant() && getUpdater().isDormant() && getUninstaller().isDormant() && getPostload().isDormant())
 			observeComponents()
 			GoToState(sStateSetup)
 		else
@@ -324,6 +433,10 @@ State Active
 		idleEventLogicLoop()
 	EndFunction
 	
+	Function postloadIdled()
+		idleEventLogicLoop()
+	EndFunction
+	
 	Bool Function installPackage(Chronicle:Package packageRef)
 		Chronicle:Engine:Component:Installer installerRef = getInstaller()
 		Bool bResult = queueForInstallLogic(packageRef)
@@ -347,7 +460,9 @@ State Active
 	EndFunction
 	
 	Function uninstall()
-		GoToState(sStateTeardown)
+		if (canUninstall())
+			GoToState(sStateTeardown)
+		endif
 	EndFunction
 EndState
 
@@ -357,12 +472,13 @@ State Teardown
 		if (isIdle())
 			decommissionInstaller()
 			decommissionUpdater()
+			decommissionPostload()
 			getUninstaller().process()
 		endif
 	EndEvent
 	
 	Bool Function isIdle()
-		return getInstaller().IsStopped() && getUpdater().IsStopped() && getUninstaller().isIdle()
+		return getInstaller().IsStopped() && getUpdater().IsStopped() && getPostload().IsStopped() && getUninstaller().isIdle()
 	EndFunction
 	
 	Function installerIdled()
@@ -374,6 +490,13 @@ State Teardown
 	
 	Function updaterIdled()
 		decommissionUpdater()
+		if (isIdle())
+			getUninstaller().process()
+		endif
+	EndFunction
+	
+	Function postloadIdled()
+		decommissionPostload()
 		if (isIdle())
 			getUninstaller().process()
 		endif
@@ -425,6 +548,7 @@ State FatalError
 		getInstaller().sendFatalError()
 		getUpdater().sendFatalError()
 		getUninstaller().sendFatalError()
+		getPostload().sendFatalError()
 		
 		Stop()
 		
