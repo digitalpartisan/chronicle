@@ -57,3 +57,11 @@ EndFunction
 Bool Function logCouldNotInitializeCurrentVersion(Chronicle:Package packageRef) Global
 	return error(packageRef + " could not initialize its version data during installation")
 EndFunction
+
+Bool Function handlerReceivedPackage(Chronicle:Package:Handler handlerRef, Chronicle:Package packageRef) Global
+	return log(handlerRef + " received package: " + packageRef)
+EndFunction
+
+Bool Function handlerStatus(Chronicle:Package:Handler handlerRef) Global
+	return log(handlerRef + " status: is valid: " + handlerRef.isValid() + " can install: " + handlerRef.canInstall() + " can uninstall: " + handlerRef.canUninstall())
+EndFunction

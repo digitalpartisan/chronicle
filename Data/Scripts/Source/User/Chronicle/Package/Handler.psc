@@ -26,6 +26,7 @@ Chronicle:Package Function getPackage()
 EndFunction
 
 Function setPackage(Chronicle:Package newPackageRef)
+	Chronicle:Logger:Package.handlerReceivedPackage(self, newPackageRef)
 	PackageRef = newPackageRef
 	refreshStatus()
 EndFunction
@@ -43,6 +44,8 @@ Function refreshStatus()
 	
 	bCanInstall = myPackage.canInstall()
 	bCanUninstall = myPackage.canUninstall()
+	
+	Chronicle:Logger:Package.handlerStatus(self)
 EndFunction
 
 Function install()

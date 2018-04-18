@@ -26,6 +26,7 @@ Chronicle:Engine Function getEngine()
 EndFunction
 
 Function setEngine(Chronicle:Engine newEngineRef)
+	Chronicle:Logger:Engine.handlerReceivedEngine(self, newEngineRef)
 	EngineRef = newEngineRef
 	refreshStatus()
 EndFunction
@@ -43,6 +44,8 @@ Function refreshStatus()
 	
 	bCanInstall = myEngine.canInstall()
 	bCanUninstall = myEngine.canUninstall()
+	
+	Chronicle:Logger:Engine.handlerStatus(self)
 EndFunction
 
 Function install()
@@ -51,6 +54,8 @@ Function install()
 	endif
 	
 	getEngine().install()
+	
+	refreshStatus()
 EndFunction
 
 Function uninstall()
@@ -59,6 +64,8 @@ Function uninstall()
 	endif
 	
 	getEngine().uninstall()
+	
+	refreshStatus()
 EndFunction
 
 Function tokenReplacementLogic()

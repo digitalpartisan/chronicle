@@ -9,7 +9,6 @@ EndFunction
 State Processing
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		logStatus()
 		
 		Chronicle:Package:Container packages = getEngine().getPackages()
 		packages.rewind()

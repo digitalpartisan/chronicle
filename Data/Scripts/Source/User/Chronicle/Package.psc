@@ -1,5 +1,5 @@
-Scriptname Chronicle:Package extends Quest Hidden Conditional
-{This is the main package logic.  When attaching this script to a quest object, do not check the }
+Scriptname Chronicle:Package extends Quest Hidden
+{This is the main package logic.}
 
 CustomEvent InstallComplete
 CustomEvent InstallFailed
@@ -17,28 +17,18 @@ Group Version
 	{The version that this package should attempt to become.}
 EndGroup
 
-Group Environment
-	Bool Property InAIO = false Auto Const
-	{Set this to true if this package will be included in some sort of All-in-One package so that it cannot be uninstalled.}
-	Chronicle:Version:Static Property CoreCompatibilityVersion Auto Const
-	{The minimum version of the Core package, if any, this package requires to function.  See the Chronicle:Engine script for details.}
-EndGroup
-
 Group Messaging
+	Message Property Description Auto Const Mandatory
+	{Used to explain the functionality of this package to the user when it is needed.  Required because this option really should be available.}
+	
 	Message Property InstallationMessage Auto Const
 	{Shown to the player when this package is installed, provided it is set.}
 	Message Property UpdateMessage Auto Const
 	{Shown to the player when this package is updated, provided it is set.}
 	Message Property UninstallationMessage Auto Const
 	{Shown to the player when this package is uninstalled, provided it is set.}
-	Message Property Description Auto Const Mandatory
-	{Used to explain the functionality of this package to the user when it is needed.  Required because this option really should be available.}
 	Message Property FatalErrorMessage Auto Const
 	{Used when something catastrophic happens so that the user knows the package has shut itself down, provided it is set.}
-	Message Property TooOldMessage Auto Const
-	{The message displayed when this package's CoreCompatibilityVersion value is below the engine's required version.  I.e. what to tell the player when the mod providing this package isn't up to date.}
-	Message Property TooNewMessage Auto Const
-	{The message displayed when this package's CoreCompatibilityVersion value is higher than the Core Package's version setting.  I.e. what to tell the player when the mod providing the core package isn't up to date.}
 EndGroup
 
 Chronicle:Version:Static NextUpdate = None
@@ -51,6 +41,12 @@ String sStateTeardown = "Teardown" Const
 String sStateDecommissioned = "Decommissioned" Const
 String sStateFatalError = "FatalError" Const
 
+Bool Function isEngineAccessible()
+{Override this in child scripts to implement the correct behavior.}
+	Chronicle:Logger.logBehaviorUndefined(self, "isEngineAccessible()")
+	return false
+EndFunction
+
 Chronicle:Engine Function getEngine()
 {Override this in child scripts to implement the correct behavior.}
 	Chronicle:Logger.logBehaviorUndefined(self, "getEngine()")
@@ -58,7 +54,9 @@ Chronicle:Engine Function getEngine()
 EndFunction
 
 Bool Function isInAIO()
-	return InAIO
+{Override this in child scripts to implement the correct behavior.}
+	Chronicle:Logger.logBehaviorUndefined(self, "isInAIO()")
+	return false
 EndFunction
 
 Chronicle:Version:Stored Function getCurrentVersion()
@@ -70,7 +68,9 @@ Chronicle:Version:Static Function getVersionSetting()
 EndFunction
 
 Chronicle:Version Function getCoreCompatibilityVersion()
-	return CoreCompatibilityVersion
+{Override this in child scripts to implement the correct behavior.}
+	Chronicle:Logger.logBehaviorUndefined(self, "getEngine()")
+	return None
 EndFunction
 
 Bool Function hasValidVersionSetting()
@@ -83,7 +83,7 @@ Bool Function hasValidVersionSetting()
 EndFunction
 
 Bool Function isInstalled()
-	return getCurrentVersion().validate() && getEngine().getPackages().hasPackage(self)
+	return getCurrentVersion().validate() && isEngineAccessible() && getEngine().getPackages().hasPackage(self)
 EndFunction
 
 Bool Function meetsCustomInstallationConditions()
@@ -107,7 +107,7 @@ Bool Function customUninstallationBehavior()
 EndFunction
 
 Bool Function canInstallLogic()
-	return hasValidVersionSetting() && !isInstalled() && meetsCustomInstallationConditions() && getEngine().isPackageCompatible(self)
+	return hasValidVersionSetting() && isEngineAccessible() && !isInstalled() && meetsCustomInstallationConditions() && getEngine().isPackageCompatible(self)
 EndFunction
 
 Bool Function canInstall()

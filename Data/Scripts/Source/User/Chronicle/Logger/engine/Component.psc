@@ -23,6 +23,10 @@ Bool Function logStatus(Chronicle:Engine:Component componentRef) Global
 	return log(componentRef + " in state: " + componentRef.GetState() + ", needs processing: " + componentRef.needsProcessing() + ",  with queue size " + componentRef.GetQueueSize())
 EndFunction
 
+Bool Function logNeedsProcessing(Chronicle:Engine:Component componentRef, Bool bInput) Global
+	return log(componentRef + " needs processing: " + componentRef.needsProcessing() + " with boolean input: " + bInput + " and queue size: " + componentRef.getQueueSize())
+EndFunction
+
 Bool Function logListening(Chronicle:Engine:Component componentRef, Chronicle:Package packageRef) Global
 	return log(componentRef + " is listening for package " + packageRef)
 EndFunction
@@ -45,4 +49,12 @@ EndFunction
 
 Bool Function logCannotQueue(Chronicle:Engine:Component componentRef, Chronicle:Package packageRef) Global
 	return log(componentRef + " could not queue package " + packageRef)
+EndFunction
+
+Bool Function logNothingToProcess(Chronicle:Engine:Component componentRef) Global
+	return log(componentRef + " has no further items in the queue")
+EndFunction
+
+Bool Function logProcessingPackage(Chronicle:Engine:Component componentRef, Chronicle:Package packageRef) Global
+	return log(componentRef + " is processing package " + packageRef)
 EndFunction

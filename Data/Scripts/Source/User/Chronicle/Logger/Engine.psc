@@ -69,3 +69,19 @@ EndFunction
 Bool Function logProcessComponent(Chronicle:Engine:Component componentRef) Global
 	return log(componentRef.getEngine() + " is processing component " + componentRef)
 EndFunction
+
+Bool Function logPackageTooOld(Chronicle:Engine engineRef, Chronicle:Package packageRef) Global
+	return log(engineRef + " has determined " + packageRef + " is too old")
+EndFunction
+
+Bool Function logPackageToonew(Chronicle:Engine engineRef, Chronicle:package packageRef) Global
+	return log(engineRef + " has determined " + packageRef + " is too new")
+EndFunction
+
+Bool Function handlerReceivedEngine(Chronicle:Engine:Handler handlerRef, Chronicle:Engine engineRef) Global
+	return log(handlerRef + " received engine: " + engineRef)
+EndFunction
+
+Bool Function handlerStatus(Chronicle:Engine:Handler handlerRef) Global
+	return log(handlerRef + " status: is valid: " + handlerRef.isValid() + " can install: " + handlerRef.canInstall() + " can uninstall: " + handlerRef.canUninstall())
+EndFunction
