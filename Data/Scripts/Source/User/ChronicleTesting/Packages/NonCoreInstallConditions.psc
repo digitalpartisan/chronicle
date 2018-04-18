@@ -1,4 +1,4 @@
-Scriptname ChronicleTesting:Packages:CustomConditionsFailure extends Chronicle:Package:Local Conditional
+Scriptname ChronicleTesting:Packages:NonCoreInstallConditions extends Chronicle:Package:NonCore
 
 GlobalVariable Property ConditionToggle Auto Const Mandatory
 
