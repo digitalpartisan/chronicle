@@ -18,7 +18,7 @@ Function sendIdled()
 EndFunction
 
 Function setToIdle()
-	
+	GoToState(sStateIdle)
 EndFunction
 
 Function sendFatalError()
@@ -32,6 +32,7 @@ EndFunction
 
 Function setNeedsProcessing(Bool bValue = true)
 	bNeedsProcessing = bValue
+	Chronicle:Logger:Engine:Component.logNeedsProcessing(self, bValue)
 EndFunction
 
 Int Function getQueueSize()
@@ -44,6 +45,14 @@ EndFunction
 
 Bool Function isQueuePopulated()
 	return 0 < getQueueSize()
+EndFunction
+
+Chronicle:Package Function getQueueItem(Int iIndex)
+	if (0 <= iIndex && iIndex < getQueueSize())
+		return PackageQueue[iIndex]
+	else
+		return None
+	endif
 EndFunction
 
 Chronicle:Package[] Function getPackageQueue()
@@ -65,7 +74,7 @@ Bool Function queuePackage(Chronicle:Package packageRef)
 		PackageQueue.Add(packageRef)
 		Chronicle:Logger:Engine:Component.logQueued(self, packageRef)
 		setNeedsProcessing()
-		logStatus()
+		
 		return true
 	else
 		Chronicle:Logger:Engine:Component.logCannotQueue(self, packageRef)
@@ -99,10 +108,6 @@ Chronicle:Engine Function getEngine()
 	return MyEngine
 EndFunction
 
-Function logStatus()
-	Chronicle:Logger:Engine:Component.logStatus(self)
-EndFunction
-
 Bool Function isDormant()
 	return false
 EndFunction
@@ -128,13 +133,11 @@ EndEvent
 Auto State Dormant
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		logStatus()
 	EndEvent
 	
 	Event OnQuestInit()
 		PackageQueue = new Chronicle:Package[0] ; because array variables initialize to None
 		startupBehavior()
-		logStatus()
 	EndEvent
 	
 	Bool Function isDormant()
@@ -145,7 +148,6 @@ EndState
 State Idle
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		logStatus()
 		sendIdled()
 	EndEvent
 	
@@ -157,7 +159,6 @@ EndState
 State FatalError
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		logStatus()
 		Stop()
 	EndEvent
 	

@@ -61,7 +61,6 @@ EndEvent
 State CoreUpdate
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		logStatus()
 		
 		Chronicle:Package targetRef = getTargetPackage()
 		if (targetRef.canUpdate())
@@ -84,7 +83,7 @@ EndState
 State PackageUpdates
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		logStatus()
+
 		getEngine().getPackages().rewind(true) ; set the pointer to the 
 		processNextPackage()
 	EndEvent

@@ -8,6 +8,10 @@ Chronicle:Package Function getTargetPackage()
 	return None
 EndFunction
 
+Function startupBehavior()
+	GoToState(sStateCoreInstall)
+EndFunction
+
 Function goToProcessingState()
 	GoToState(sStateProcessQueue)
 EndFunction
@@ -63,7 +67,6 @@ Event Chronicle:Package.InstallFailed(Chronicle:Package packageRef, Var[] args)
 		Chronicle:Logger:Engine:Component.logPhantomResponse(self, targetRef, packageRef)
 	endif
 	
-	;Chronicle:Logger:Engine:Component.logFailure(self, targetRef)
 	sendFatalError()
 EndEvent
 
@@ -72,7 +75,6 @@ Function performPackageInstallation(Chronicle:Package packageRef)
 		observePackageInstall()
 		packageRef.Start()
 	else
-		;Chronicle:Logger:Engine:Component.logCannotInstall(self, packageRef)
 		sendFatalError()
 	endif
 EndFunction
@@ -80,7 +82,6 @@ EndFunction
 State CoreInstall
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		logStatus()
 		performPackageInstallation(getTargetPackage())
 	EndEvent
 	
@@ -100,24 +101,23 @@ EndState
 State ProcessQueue
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		logStatus()
 		processNextPackage()
 	EndEvent
 	
 	Chronicle:Package Function getTargetPackage()
-		if (isQueuePopulated())
-			return getPackageQueue()[0]
-		else
-			return None
-		endif
+		return getQueueItem(0)
 	EndFunction
 	
 	Function processNextPackage()
 		Chronicle:Package targetRef = getTargetPackage()
-		if (None == targetRef)
-			setToIdle()
-		else
+		
+		if (targetRef)
+			Chronicle:Logger:Engine:Component.logProcessingPackage(self, targetRef)
 			performPackageInstallation(targetRef)
+		else
+			Chronicle:Logger:Engine:Component.logNothingToProcess(self)
+			setNeedsProcessing(false)
+			setToIdle()
 		endif
 	EndFunction
 	

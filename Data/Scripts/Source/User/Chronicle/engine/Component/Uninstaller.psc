@@ -93,7 +93,6 @@ EndFunction
 State ProcessAll
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		logStatus()
 		getEngine().getPackages().fastForward() ; start at the end of the package list
 		processNextPackage()
 	EndEvent
@@ -114,7 +113,6 @@ EndState
 State ProcessQueue
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		logStatus()
 		processNextPackage()
 	EndEvent
 	

@@ -14,7 +14,7 @@ CustomEvent PostloadInitialized
 CustomEvent PostloadDecommissioned
 
 Group Environment
-	Chronicle:Package:Local Property CorePackage Auto Const Mandatory
+	Chronicle:Package:Core Property CorePackage Auto Const Mandatory
 	{This is the core package for your plugin.  The engine needs to identify the core package for other packages in case they require a specific version.  The package this value holds is also unable to be installed under any circumstance.}
 	Bool Property AIOMode = false Auto Const
 	{When set to true, packages which are marked as being in the AIO release cannot be uninstalled at any point.}
@@ -54,7 +54,7 @@ Bool Function isAIOModeActive()
 	return AIOMode
 EndFunction
 
-Chronicle:Package:Local Function getCorePackage()
+Chronicle:Package:Core Function getCorePackage()
 	return CorePackage
 EndFunction
 
@@ -96,7 +96,7 @@ TLDR: the given package is intended to run against a newer version of the core p
 	return packageCompatibilityVersion.greaterThan(getCorePackage().getVersionSetting()) ; use the version setting in case not all core upgrades have taken place yet
 EndFunction
 
-Function notifyTooOld(Chronicle:Package packageRef)
+Function notifyTooOld(Chronicle:Package:NonCore packageRef)
 	if (packageRef.TooOldMessage)
 		packageRef.TooOldMessage.Show()
 	elseif (!bShownTooOldMessage)
@@ -105,7 +105,7 @@ Function notifyTooOld(Chronicle:Package packageRef)
 	endif
 EndFunction
 
-Function notifyTooNew(Chronicle:Package packageRef)
+Function notifyTooNew(Chronicle:Package:NonCore packageRef)
 	if (packageRef.TooNewMessage)
 		packageRef.TooNewMessage.Show()
 	elseif (!bShownTooNewMessage)
@@ -115,14 +115,20 @@ Function notifyTooNew(Chronicle:Package packageRef)
 EndFunction
 
 Bool Function isPackageCompatible(Chronicle:Package packageRef)
-	if (isPackageTooOld(packageRef))
-		notifyTooOld(packageRef)
-		return false
-	endif
+	Chronicle:Package:NonCore nonCorePackage = packageRef as Chronicle:Package:NonCore
 	
-	if (isPackageTooNew(packageRef))
-		notifyTooNew(packageRef)
-		return false
+	if (nonCorePackage) ; only non-core packages can be considered too old or too new
+		if (isPackageTooOld(nonCorePackage))
+			Chronicle:Logger:Engine.logPackageTooOld(self, nonCorePackage)
+			notifyTooOld(nonCorePackage)
+			return false
+		endif
+		
+		if (isPackageTooNew(nonCorePackage))
+			Chronicle:Logger:Engine.logPackageTooNew(self, nonCorePackage)
+			notifyTooNew(nonCorePackage)
+			return false
+		endif
 	endif
 	
 	return true
@@ -208,7 +214,7 @@ EndFunction
 
 Function initializePostload()
 	getPostload().Start()
-	SendCustomEvent("Postloadinitialized")
+	SendCustomEvent("PostloadInitialized")
 EndFunction
 
 Function decommissionPostload()
@@ -223,6 +229,7 @@ EndFunction
 Bool Function processComponent(Chronicle:Engine:Component componentRef)
 	if (componentRef.needsProcessing())
 		componentRef.process()
+		return true
 	else
 		return false
 	endif
@@ -419,6 +426,7 @@ State Active
 		Chronicle:Logger.logStateChange(self, asOldState)
 		initializeUpdater()
 		initializeUninstaller()
+		initializePostload()
 	EndEvent
 	
 	Function installerIdled()
