@@ -39,3 +39,7 @@ EndFunction
 Bool Function logInvalidation(Chronicle:Version:Stored versionRef) Global
 	return log(versionRef + " has been invalidated")
 EndFunction
+
+Bool Function logNoUpdate(Chronicle:Version:Static versionRef) Global
+	return error(versionRef + " has no associated update to run")
+EndFunction

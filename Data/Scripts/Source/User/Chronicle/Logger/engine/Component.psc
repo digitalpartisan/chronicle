@@ -39,7 +39,7 @@ Bool Function logPackageFailure(Chronicle:Engine:Component componentRef, Chronic
 	return error(componentRef + " observed fatal error from package " + packageRef)
 EndFunction
 
-Bool Function logPhantomResponse(Chronicle:Engine:Component componentRef, Chronicle:Package expectedRef, Chronicle:Package actualRef) Global
+Bool Function logPhantomResponse(Chronicle:Engine:Component componentRef, Chronicle:Package expectedRef, Quest actualRef) Global
 	return error(componentRef + " received response from phantom package, expected" + expectedRef + " , actual: " + actualRef)
 EndFunction
 
@@ -57,4 +57,8 @@ EndFunction
 
 Bool Function logProcessingPackage(Chronicle:Engine:Component componentRef, Chronicle:Package packageRef) Global
 	return log(componentRef + " is processing package " + packageRef)
+EndFunction
+
+Bool Function logPackageNotAddedToContainer(Chronicle:Engine:Component componentRef, Chronicle:Package packageRef) Global
+	return error(componentRef + " could not add package " + packageRef + " to container")
 EndFunction

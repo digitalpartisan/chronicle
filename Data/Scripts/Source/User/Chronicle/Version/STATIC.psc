@@ -16,6 +16,8 @@ Chronicle:Version:Static Property PreviousVersion Auto Const
 {Which version precedes this one in an upgrade cycle.  This information matters because an upgrade process might need to look into the past to determine which updates need to be applied.  Left empty for the first version.}
 Chronicle:Version:Static Property NextVersion Auto Const
 {Which version follows this one in an upgrade cycle.  This matters because an upgrade process will need to proceed to the next update should the package call for it.  Left empty for the most recent version.}
+Chronicle:Package:Update Property MyUpdate Auto Const
+{Required in order to process this udpate and move a package from one version to another.}
 
 Chronicle:Version:Static Function getPreviousVersion()
 	return PreviousVersion
@@ -23,6 +25,10 @@ EndFunction
 
 Chronicle:Version:Static Function getNextVersion()
 	return NextVersion
+EndFunction
+
+Chronicle:Package:Update Function getUpdate()
+	return MyUpdate
 EndFunction
 
 Int Function getMajor()

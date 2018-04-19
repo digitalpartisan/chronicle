@@ -58,6 +58,26 @@ Bool Function logCouldNotInitializeCurrentVersion(Chronicle:Package packageRef) 
 	return error(packageRef + " could not initialize its version data during installation")
 EndFunction
 
+Bool Function logPhantomResponse(Chronicle:Package packageRef, Chronicle:Package:Update expectedRef, Chronicle:Package:Update actualRef) Global
+	return error(packageRef + " received response from phantom update, expected" + expectedRef + " , actual: " + actualRef)
+EndFunction
+
+Bool Function versionConfigurationError(Chronicle:Package packageRef) Global
+	return error(packageRef + " cannot identify the appropriate update to run, check version previous/next settings")
+EndFunction
+
+Bool Function identifiedNextVersion(Chronicle:Package packageRef, Chronicle:Version versionRef) Global
+	return log(packageRef + " identified next update " + versionRef)
+EndFunction
+
+Bool Function logObservingUpdate(Chronicle:Package packageRef, Chronicle:Package:Update updateRef) Global
+	return log(packageRef + " is observing update " + updateRef)
+EndFunction
+
+Bool Function logStopObservingUpdate(Chronicle:Package packageRef, Chronicle:Package:Update updateRef) Global
+	return log(packageRef + " is no longer observing update " + updateRef)
+EndFunction
+
 Bool Function handlerReceivedPackage(Chronicle:Package:Handler handlerRef, Chronicle:Package packageRef) Global
 	return log(handlerRef + " received package: " + packageRef)
 EndFunction

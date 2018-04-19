@@ -50,7 +50,7 @@ Event Chronicle:Package.InstallComplete(Chronicle:Package packageRef, Var[] args
 		if (addPackageToContainer(targetRef))
 			postProcessingBehavior()
 		else
-			;Chronicle:Logger:Engine:Component.logNoAdd(self, targetRef)
+			Chronicle:Logger:Engine:Component.logPackageNotAddedToContainer(self, targetRef)
 			sendFatalError()
 		endif
 	else
