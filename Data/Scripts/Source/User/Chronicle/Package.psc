@@ -19,8 +19,7 @@ EndGroup
 
 Group Messaging
 	Message Property Description Auto Const Mandatory
-	{Used to explain the functionality of this package to the user when it is needed.  Required because this option really should be available.}
-	
+	{Used to explain the functionality of this package to the user when it is needed.  Required because this information may matter to the user.}
 	Message Property InstallationMessage Auto Const
 	{Shown to the player when this package is installed, provided it is set.}
 	Message Property UpdateMessage Auto Const
@@ -31,7 +30,7 @@ Group Messaging
 	{Used when something catastrophic happens so that the user knows the package has shut itself down, provided it is set.}
 EndGroup
 
-Chronicle:Version:Static NextUpdate = None
+Chronicle:Version:Static nextVersion = None
 
 String sStateDormant = "Dormant" Const
 String sStateSetup = "Setup" Const
@@ -114,6 +113,16 @@ Bool Function canInstall()
 	return canInstallLogic()
 EndFunction
 
+Function sendInstallComplete()
+	SendCustomEvent("InstallComplete")
+	GoToState(sStateIdle)
+EndFunction
+
+Function sendInstallFailed()
+	SendCustomEvent("InstallFailed")
+	GoToState(sStateFatalError)
+EndFunction
+
 Bool Function canUninstall()
 	return false
 EndFunction
@@ -138,32 +147,70 @@ Function update()
 
 EndFunction
 
-Function observeUpdate()
-	RegisterForRemoteEvent(NextUpdate, "OnQuestShutdown")
+Function observeNextUpdate()
+	Chronicle:Package:Update targetUpdate = nextVersion.getUpdate()
+	
+	RegisterForCustomEvent(targetUpdate, "Success")
+	RegisterForCustomEvent(targetUpdate, "Failure")
+	
+	Chronicle:Logger:Package.logObservingUpdate(self, targetUpdate)
 EndFunction
 
-Function stopObservingUpdate()
-	UnregisterForRemoteEvent(NextUpdate, "OnQuestShutdown")
+Function stopObservingNextUpdate()
+	Chronicle:Package:Update targetUpdate = nextVersion.getUpdate()
+	
+	UnregisterForCustomEvent(targetUpdate, "Success")
+	UnregisterForCustomEvent(targetUpdate, "Failure")
+	
+	Chronicle:Logger:Package.logStopObservingUpdate(self, targetUpdate)
 EndFunction
 
-Bool Function identifyFirstUpdate()
+Bool Function identifyNextVersion()
 	return false
 EndFunction
 
-Bool Function attemptUpdate()
-	return false
+Function attemptNextUpdate()
+	
 EndFunction
 
-Bool Function performUpdates()
-	return false
+Function sendUpdateComplete()
+	SendCustomEvent("UpdateComplete")
+	GoToState(sStateIdle)
+EndFunction
+
+Function sendUpdateFailed()
+	SendCustomEvent("UpdateFailed")
+	GoToState(sStateFatalError)
 EndFunction
 
 Bool Function isIdle()
 	return false
 EndFunction
 
-Event Quest.OnQuestShutdown(Quest questRef)
+Event Chronicle:Package:Update.Success(Chronicle:Package:Update updateRef, Var[] args)
+	stopObservingNextUpdate()
 	
+	Chronicle:Package:Update nextUpdate = nextVersion.getUpdate()
+	if (updateRef == nextUpdate)
+		CurrentVersion.setTo(nextVersion) ; eevry time an update is complete, make sure the package's current version is correct so that calls to isCurrent() get correct results
+		nextVersion = nextVersion.getNextVersion()
+		
+		attemptNextUpdate()
+	else
+		Chronicle:Logger:Package.logPhantomResponse(self, nextUpdate, updateRef)
+		sendUpdateFailed()
+	endif
+EndEvent
+
+Event Chronicle:Package:Update.Failure(Chronicle:Package:Update updateRef, Var[] args)
+	stopObservingNextUpdate()
+	
+	Chronicle:Package:Update nextUpdate = nextVersion.getUpdate()
+	if (updateRef != nextUpdate)
+		Chronicle:Logger:Package.logPhantomResponse(self, nextUpdate, updateRef)
+	endif
+	
+	sendUpdateFailed()
 EndEvent
 
 Event OnQuestInit()
@@ -201,32 +248,26 @@ State Setup
 		
 		if (!canInstall())
 			Chronicle:Logger:Package.logSetupStateUnableToInstall(self)
-			SendCustomEvent("InstallFailed")
-			GoToState(sStateFatalError)
+			sendInstallFailed()
 			return
 		endif
 		
 		if (!customInstallationBehavior())
 			Chronicle:Logger:Package.logCustomInstallBehaviorFailed(self)
-			SendCustomEvent("InstallFailed")
-			GoToState(sStateFatalError)
+			sendInstallFailed()
 			return
 		endif
 		
 		if (!getCurrentVersion().setTo(getVersionSetting()))
 			Chronicle:Logger:Package.logCouldNotInitializeCurrentVersion(self)
-			SendCustomEvent("InstallFailed")
-			GoToState(sStateFatalError)
+			sendInstallFailed()
 			return
 		endif
 		
 		if (InstallationMessage)
 			InstallationMessage.Show()
 		endif
-		
-		SendCustomEvent("InstallComplete")
-		
-		GoToState(sStateIdle)
+		sendInstallComplete()
 	EndEvent
 EndState
 
@@ -268,28 +309,16 @@ EndState
 State Updating
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		if (identifyFirstUpdate())
-			attemptUpdate()
+		if (identifyNextVersion())
+			attemptNextUpdate()
 		else
+			SendCustomEvent("UpdateFailed")
 			GoToState(sStateFatalError)
 		endif
 	EndEvent
 	
-	Event Quest.OnQuestShutdown(Quest questRef)
-		stopObservingUpdate()
-		
-		if (questRef == NextUpdate)
-			CurrentVersion.setTo(NextUpdate)
-			NextUpdate = NextUpdate.getNextVersion()
-			attemptUpdate()
-		else
-			; error message to indicate unknown quest object reporting completion
-			GoToState(sStateFatalError)
-		endif
-	EndEvent
-	
-	Bool Function identifyFirstUpdate()
-		NextUpdate = None
+	Bool Function identifyNextVersion()
+		nextVersion = None
 		
 		Chronicle:Version:Stored current = getCurrentVersion()
 		Chronicle:Version:Static currentMatch = getVersionSetting()
@@ -299,36 +328,41 @@ State Updating
 		endwhile
 		
 		if (!currentMatch || currentMatch.lessThan(current))
-			; error log about configuration failure
+			Chronicle:Logger:Package.versionConfigurationError(self)
 			return false
 		endif
 		
-		NextUpdate = currentMatch.getNextVersion() ; because we don't need to run the update that puts this package at the current version
+		nextVersion = currentMatch.getNextVersion() ; because we don't need to run the update that puts this package at the current version, but we do need to run the next one
+		Chronicle:Logger:Package.identifiedNextVersion(self, nextVersion)
+		
 		return true
 	EndFunction
 
-	Bool Function attemptUpdate()
-		if (!NextUpdate || NextUpdate.greaterThan(getVersionSetting())) ;this makes sure any known version updates past the current setting for the package do not run yet
-			NextUpdate = None
+	Function attemptNextUpdate()
+		if (!nextVersion || nextVersion.greaterThan(getVersionSetting())) ; this makes sure any known version updates past the current setting for the package do not run yet
+			Chronicle:Package:Update nextUpdate = None
 			
-			if (isCurrent())
-				SendCustomEvent("UpdateComplete")
+			if (isCurrent()) ; the whole reason for running updates is that the package's version is not current with its setting.  If that hasn't been fixed, updating failed by definition
 				if (UpdateMessage)
 					UpdateMessage.Show()
 				endif
-				GoToState(sStateIdle)
-				return true
+				
+				sendUpdateComplete()
 			else
-				SendCustomEvent("UpdateFailed")
-				return false
+				sendUpdateFailed()
 			endif
+			
+			return
 		endif
 		
-		NextUpdate = NextUpdate.getNextVersion()
-		observeUpdate()
-		NextUpdate.Start()
+		if (!nextVersion.getUpdate())
+			Chronicle:Logger:Version.logNoUpdate(nextVersion)
+			sendUpdateFailed()
+		endif
 		
-		return true
+		observeNextUpdate()
+		nextVersion.getUpdate().Start()
+		
 	EndFunction
 EndState
 
@@ -366,5 +400,13 @@ State FatalError
 		if (FatalErrorMessage)
 			FatalErrorMessage.Show()
 		endif
+	EndEvent
+	
+	Event OnQuestInit()
+	
+	EndEvent
+	
+	Event OnQuestShutdown()
+	
 	EndEvent
 EndState

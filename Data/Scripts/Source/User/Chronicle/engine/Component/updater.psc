@@ -54,7 +54,6 @@ Event Chronicle:Package.UpdateFailed(Chronicle:Package packageRef, Var[] args)
 		Chronicle:Logger:Engine:Component.logPhantomResponse(self, targetRef, packageRef)
 	endif
 	
-	;Chronicle:Logger:Engine:Component.logFailure(self, targetRef)
 	sendFatalError()
 EndEvent
 
