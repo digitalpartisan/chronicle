@@ -413,6 +413,7 @@ EndState
 State Setup
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
+		getPackages().initialize()
 		initializeInstaller()
 	EndEvent
 	

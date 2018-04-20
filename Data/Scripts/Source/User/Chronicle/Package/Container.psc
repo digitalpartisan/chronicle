@@ -1,29 +1,30 @@
 Scriptname Chronicle:Package:Container extends Quest
 
-FormList Property PackageList Auto Const Mandatory
-{The FormList to store the package references in.
-This could have been done with an array, but a FormList outright prevents duplicates and was deemed the safer option.
-Plus, they're more useful for things like injection and dynamic terminal displays.}
+Chronicle:Package[] MyPackages
 
 Int iInternalPointer = 0 ; supports iterator functionality
 
 Int iCorePackageIndex = 0 Const ; For readability purposes
 Int iFirstPackageIndex = 1 Const ; Mostly for code readability reasons
 
-FormList Function getPackageList()
-	return PackageList
+Function initialize()
+	MyPackages = new Chronicle:Package[0]
 EndFunction
 
-Int Function getCount()
-	return PackageList.GetSize()
+Chronicle:Package[] Function getPackages()
+	return MyPackages
+EndFunction
+
+Int Function getSize()
+	return MyPackages.Length
 EndFunction
 
 Bool Function passesIntegrityCheck()
 	Int iCounter = 0
-	Int iSize = PackageList.GetSize()
+	Int iSize = getSize()
 	
 	while (iCounter < iSize)
-		if (!PackageList.GetAt(iCounter))
+		if (!MyPackages[iCounter])
 			return false
 		endif
 		iCounter += 1
@@ -33,7 +34,7 @@ Bool Function passesIntegrityCheck()
 EndFunction
 
 Bool Function isIndexValid(Int iIndex)
-	return 0 <= iIndex && iIndex < PackageList.GetSize()
+	return 0 <= iIndex && iIndex < getSize()
 EndFunction
 
 Bool Function isPointerValid()
@@ -44,7 +45,7 @@ Function setPointer(Int iNewValue, Bool bForceValid = false)
 {Running the pointer far past the valid bounds of the list doesn't do anything in service of whether or not current() returns a non-None result.
 A reasonable program would have stopped once current() no longer returned a valid result following a call to previous() or next().}
 	Int iLowerBound = -1 ; if the pointer is at the beginning of the list and previous() is called
-	Int iUpperBound = PackageList.GetSize() ; if the pointer is at the end of the list and next() is called
+	Int iUpperBound = getSize() ; if the pointer is at the end of the list and next() is called
 	if (bForceValid)
 		iLowerBound = 0
 		iUpperBound -= 1
@@ -69,16 +70,16 @@ Function adjustPointer(Int iOffset)
 EndFunction
 
 Bool Function hasPackage(Chronicle:Package packageRef)
-	return PackageList.HasForm(packageRef)
+	return 0 <= MyPackages.Find(packageRef)
 EndFunction
 
 Int Function locatePackage(Chronicle:Package packageRef)
-	return PackageList.Find(packageRef)
+	return MyPackages.Find(packageRef)
 EndFunction
 
 Chronicle:Package Function getAsPackage(Int iIndex)
 	if (isIndexValid(iIndex))
-		return PackageList.GetAt(iIndex) as Chronicle:Package
+		return MyPackages[iIndex] as Chronicle:Package
 	else
 		return None
 	endif
@@ -92,7 +93,7 @@ Bool Function addPackage(Chronicle:Package packageRef)
 	if (hasPackage(packageRef))
 		return false
 	else
-		PackageList.AddForm(packageRef)
+		MyPackages.Add(packageRef)
 		return true
 	endif
 EndFunction
@@ -106,7 +107,7 @@ Bool Function setCorePackage(Chronicle:Package packageRef)
 		return false
 	endif
 
-	if (0 < PackageList.GetSize())
+	if (0 < getSize())
 		return false ; packageRef can't be the core package because there's already a package registered
 	else
 		return addPackage(packageRef)
@@ -122,7 +123,7 @@ Function rewind(Bool bSkipCore = false)
 EndFunction
 
 Function fastForward()
-	Int iSize = PackageList.GetSize()
+	Int iSize = getSize()
 	
 	if (0 == iSize)
 		setPointer(0)
@@ -154,8 +155,9 @@ Bool Function removeCurrent()
 EndFunction
 
 Bool Function removePackage(Chronicle:Package packageRef)
-	if (hasPackage(packageRef))
-		PackageList.RemoveAddedForm(packageRef)
+	Int iIndex = locatePackage(packageRef)
+	if (0 <= iIndex)
+		MyPackages.Remove(iIndex)
 		return true
 	else
 		return false
