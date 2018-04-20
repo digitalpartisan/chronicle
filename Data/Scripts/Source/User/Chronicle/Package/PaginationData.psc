@@ -6,7 +6,7 @@ Chronicle:Engine:Handler Property EngineHandler Auto Const Mandatory
 int Function getRawDataSize()
 {See DynamicTerminal:ListWrapper.}
 	if (EngineHandler.isValid())
-		return EngineHandler.getEngine().getPackages().getCount()
+		return EngineHandler.getEngine().getPackages().getSize()
 	else
 		return 0
 	endif
