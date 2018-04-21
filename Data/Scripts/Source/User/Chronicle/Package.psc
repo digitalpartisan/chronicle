@@ -106,7 +106,7 @@ Bool Function customUninstallationBehavior()
 EndFunction
 
 Bool Function canInstallLogic()
-	return hasValidVersionSetting() && isEngineAccessible() && !isInstalled() && meetsCustomInstallationConditions() && getEngine().isPackageCompatible(self)
+	return hasValidVersionSetting() && isEngineAccessible() && !isInstalled() && meetsCustomInstallationConditions()
 EndFunction
 
 Bool Function canInstall()
@@ -277,7 +277,7 @@ State Idle
 	EndEvent
 	
 	Bool Function canUpdate()
-		return isInstalled() && !isCurrent() && getEngine().isPackageCompatible(self)
+		return isInstalled() && !isCurrent()
 	EndFunction
 	
 	Bool Function isIdle()

@@ -35,7 +35,7 @@ Function stopObservingPackageInstall()
 EndFunction
 
 Bool Function canActOnPackage(Chronicle:Package targetPackage)
-	return targetPackage.canInstall()
+	return targetPackage.canInstall() && getEngine().isPackageCompatible(targetPackage)
 EndFunction
 
 Bool Function addPackageToContainer(Chronicle:Package packageRef)
