@@ -83,7 +83,7 @@ State PackageUpdates
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
 
-		getEngine().getPackages().rewind(true) ; set the pointer to the 
+		getEngine().getPackages().rewind(true) ; set the pointer to the first package after the core package (since it's been taken care of)
 		processNextPackage()
 	EndEvent
 	
@@ -93,14 +93,15 @@ State PackageUpdates
 	
 	Function processNextPackage()
 		Chronicle:Package targetRef = getTargetPackage()
+		Chronicle:Engine engineRef = getEngine()
 		
 		if (!targetRef)
 			setToIdle()
-		elseif (targetRef.canUpdate())
+		elseif (engineRef.isPackageCompatible(targetRef) && canActOnPackage(targetRef))
 			observePackageUpdate()
 			targetRef.update()
 		else
-			getEngine().getPackages().next()
+			engineRef.getPackages().next()
 			processNextPackage()
 		endif
 	EndFunction
