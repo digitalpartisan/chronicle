@@ -6,6 +6,7 @@ Message Property InvalidEngineMessage Auto Const Mandatory
 Bool bValid = false Conditional ; whether or not there's a valid Engine to handle
 Bool bCanInstall = false Conditional ; whether or not the engine can be started
 Bool bCanUninstall = false Conditional ; whether or not the engine can be stopped
+Bool bActive = false Conditional ; whether or not the engine has completed setup but is not shutting down
 
 Chronicle:Engine EngineRef = None
 
@@ -21,6 +22,10 @@ Bool Function canUninstall()
 	return bCanUninstall
 EndFunction
 
+Bool Function isActive()
+	return bActive
+EndFunction
+
 Chronicle:Engine Function getEngine()
 	return EngineRef
 EndFunction
@@ -31,19 +36,27 @@ Function setEngine(Chronicle:Engine newEngineRef)
 	refreshStatus()
 EndFunction
 
-Function refreshStatus()
+Function clearStatus()
 	bValid = false
 	bCanInstall = false
 	bCanUninstall = false
+EndFunction
+
+Function setStatus()
+	Chronicle:Engine myEngine = getEngine()
+	bCanInstall = myEngine.canInstall()
+	bCanUninstall = myEngine.canUninstall()
+	bActive = myEngine.isActive()
+EndFunction
+
+Function refreshStatus()
+	clearStatus()
 
 	Chronicle:Engine myEngine = getEngine()
 	bValid = (None != myEngine)
-	if (!isValid())
-		return
+	if (isValid())
+		setStatus()
 	endif
-	
-	bCanInstall = myEngine.canInstall()
-	bCanUninstall = myEngine.canUninstall()
 	
 	Chronicle:Logger:Engine.handlerStatus(self)
 EndFunction

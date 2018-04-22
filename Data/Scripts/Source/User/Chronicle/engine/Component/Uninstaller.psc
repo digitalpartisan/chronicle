@@ -17,7 +17,9 @@ Function goToProcessingState()
 EndFunction
 
 Bool Function canActOnPackage(Chronicle:Package targetPackage)
-	return targetPackage.canUninstall()
+	Chronicle:Engine engineRef = getEngine()
+	; the ProcessAll state doesn't care about these conditions like the queuing logic does.  The Core package cannot be queued and neither can a package in the All-in-One release if the engine is in All-in-One mode.
+	return targetPackage.canUninstall() && !engineRef.isCorePackage(targetPackage) && ( !engineRef.isAIOModeActive() || !targetPackage.IsInAIO() )
 EndFunction
 
 Function observePackageUninstall()
@@ -76,16 +78,15 @@ Event Chronicle:Package.UninstallFailed(Chronicle:Package packageRef, Var[] args
 		Chronicle:Logger:Engine:Component.logPhantomResponse(self, targetRef, packageRef)
 	endif
 	
-	;Chronicle:Logger:Engine:Component.logFailure(self, targetRef)
+	Chronicle:Logger:Engine:Component.logPackageFailure(self, targetRef)
 	sendFatalError()
 EndEvent
 
 Function performPackageUninstallation(Chronicle:Package packageRef)
 	if (packageRef.canUninstall())
 		observePackageUninstall()
-		packageRef.Stop()
+		packageRef.uninstall()
 	else
-		;;Chronicle:Logger:Engine:Component.logCannotUninstall(self, packageRef)
 		sendFatalError()
 	endif
 EndFunction
@@ -93,7 +94,7 @@ EndFunction
 State ProcessAll
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		getEngine().getPackages().fastForward() ; start at the end of the package list
+		getEngine().getPackages().fastForward() ; start at the end of the package list since this is more or less an "undo" process
 		processNextPackage()
 	EndEvent
 	
@@ -118,7 +119,7 @@ State ProcessQueue
 	
 	Chronicle:Package Function getTargetPackage()
 		if (isQueuePopulated())
-			return getPackageQueue()[0]
+			return getQueueItem(0)
 		else
 			return None
 		endif

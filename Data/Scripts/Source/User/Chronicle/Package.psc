@@ -30,6 +30,8 @@ Group Messaging
 	{Used when something catastrophic happens so that the user knows the package has shut itself down, provided it is set.}
 EndGroup
 
+Chronicle:Package:CustomBehavior Property MyCustomizations Auto Const
+
 Chronicle:Version:Static nextVersion = None
 
 String sStateDormant = "Dormant" Const
@@ -39,6 +41,12 @@ String sStateUpdating = "Updating" Const
 String sStateTeardown = "Teardown" Const
 String sStateDecommissioned = "Decommissioned" Const
 String sStateFatalError = "FatalError" Const
+
+Function showMessageIfSet(Message messageObj = None)
+	if (messageObj)
+		messageObj.Show()
+	endif
+EndFunction
 
 Bool Function isEngineAccessible()
 {Override this in child scripts to implement the correct behavior.}
@@ -50,6 +58,10 @@ Chronicle:Engine Function getEngine()
 {Override this in child scripts to implement the correct behavior.}
 	Chronicle:Logger.logBehaviorUndefined(self, "getEngine()")
 	return None
+EndFunction
+
+Chronicle:Package:CustomBehavior Function getCustomizations()
+	return MyCustomizations
 EndFunction
 
 Bool Function isInAIO()
@@ -86,23 +98,39 @@ Bool Function isInstalled()
 EndFunction
 
 Bool Function meetsCustomInstallationConditions()
-{Override this function in child scripts to specify conditions under which this package should be installed.}
-	return true
+	Chronicle:Package:CustomBehavior customizations = getCustomizations()
+	if (customizations)
+		return customizations.meetsInstallationConditions()
+	else
+		return true
+	endif
 EndFunction
 
 Bool Function customInstallationBehavior()
-{Override this function in child scripts to specify unique installation tasks.}
-	return true
+	Chronicle:Package:CustomBehavior customizations = getCustomizations()
+	if (customizations)
+		return customizations.installBehavior()
+	else
+		return true
+	endif
 EndFunction
 
 Bool Function customPostloadBehavior()
-{Override this function in child scripts to specify unique post-load tasks.}
-	return true
+	Chronicle:Package:CustomBehavior customizations = getCustomizations()
+	if (customizations)
+		return customizations.postloadBehavior()
+	else
+		return true
+	endif
 EndFunction
 
 Bool Function customUninstallationBehavior()
-{Override this function in child scripts to specify unique uninstallation tasks.}
-	return true
+	Chronicle:Package:CustomBehavior customizations = getCustomizations()
+	if (customizations)
+		return customizations.uninstallBehavior()
+	else
+		return true
+	endif
 EndFunction
 
 Bool Function canInstallLogic()
@@ -144,6 +172,10 @@ Bool Function canUpdate()
 EndFunction
 
 Function update()
+
+EndFunction
+
+Function uninstall()
 
 EndFunction
 
@@ -213,6 +245,16 @@ Event Chronicle:Package:Update.Failure(Chronicle:Package:Update updateRef, Var[]
 	sendUpdateFailed()
 EndEvent
 
+Function sendUninstallComplete()
+	SendCustomEvent("UninstallComplete")
+	GoToState(sStateDecommissioned)
+EndFunction
+
+Function sendUninstallFailed()
+	SendCustomEvent("UninstallFailed")
+	GoToState(sStateFatalError)
+EndFunction
+
 Event OnQuestInit()
 	Chronicle:Logger.logInvalidStartupAttempt(self)
 	GoToState(sStateFatalError)
@@ -264,9 +306,7 @@ State Setup
 			return
 		endif
 		
-		if (InstallationMessage)
-			InstallationMessage.Show()
-		endif
+		showMessageIfSet(InstallationMessage)
 		sendInstallComplete()
 	EndEvent
 EndState
@@ -292,9 +332,9 @@ State Idle
 		return true
 	EndFunction
 	
-	Event OnQuestShutdown()
-		GoToState(sStateFatalError)
-	EndEvent
+	Function uninstall()
+		GoToState(sStateTeardown)
+	EndFunction
 	
 	Bool Function requestUninstallation()
 		if (getEngine().uninstallPackage(self))
@@ -343,10 +383,7 @@ State Updating
 			Chronicle:Package:Update nextUpdate = None
 			
 			if (isCurrent()) ; the whole reason for running updates is that the package's version is not current with its setting.  If that hasn't been fixed, updating failed by definition
-				if (UpdateMessage)
-					UpdateMessage.Show()
-				endif
-				
+				showMessageIfSet(UpdateMessage)
 				sendUpdateComplete()
 			else
 				sendUpdateFailed()
@@ -362,7 +399,6 @@ State Updating
 		
 		observeNextUpdate()
 		nextVersion.getUpdate().Start()
-		
 	EndFunction
 EndState
 
@@ -372,34 +408,30 @@ State Teardown
 		
 		if (customUninstallationBehavior())
 			getCurrentVersion().invalidate()
-			SendCustomEvent("UninstallComplete")
-			if (UninstallationMessage)
-				UninstallationMessage.Show()
-			endif
-			Stop()
+			sendUninstallComplete()
+			showMessageIfSet(UninstallationMessage)
 		else
-			SendCustomEvent("UninstallFailed")
-			GoToState(sStateFatalError)
+			sendUninstallFailed()
 		endif
-	EndEvent
-	
-	Event OnQuestShutdown()
-		GoToState(sStateDecommissioned)
 	EndEvent
 EndState
 
 State Decommissioned
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
+		Stop()
+	EndEvent
+	
+	Event OnQuestShutdown()
+		
 	EndEvent
 EndState
 
 State FatalError
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		if (FatalErrorMessage)
-			FatalErrorMessage.Show()
-		endif
+		showMessageIfSet(FatalErrorMessage)
+		Stop()
 	EndEvent
 	
 	Event OnQuestInit()

@@ -7,6 +7,7 @@ CustomEvent FatalError
 
 String sStateDormant = "Dormant" Const
 String sStateIdle = "Idle" Const
+String sStateDecommissioned = "Decommissioned" Const
 String sStateFatalError = "FatalError" Const
 
 Bool bNeedsProcessing = false
@@ -154,6 +155,24 @@ State Idle
 	Bool Function isIdle()
 		return true
 	EndFunction
+	
+	Event OnQuestShutdown()
+		GoToState(sStateDecommissioned)
+	EndEvent
+EndState
+
+State Decommissioned
+	Event OnBeginState(String asOldState)
+		Chronicle:Logger.logStateChange(self, asOldState)
+	EndEvent
+	
+	Bool Function canActOnPackage(Chronicle:Package packageRef)
+		return false
+	EndFunction
+	
+	Bool Function queuePackage(Chronicle:Package packageRef)
+		return false
+	EndFunction
 EndState
 
 State FatalError
@@ -165,4 +184,12 @@ State FatalError
 	Event OnQuestShutdown()
 		; do not trigger another error
 	EndEvent
+	
+	Bool Function canActOnPackage(Chronicle:Package packageRef)
+		return false
+	EndFunction
+	
+	Bool Function queuePackage(Chronicle:Package packageRef)
+		return false
+	EndFunction
 EndState
