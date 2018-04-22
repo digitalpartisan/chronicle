@@ -42,8 +42,9 @@ Function refreshStatus()
 		return
 	endif
 	
-	bCanInstall = myPackage.canInstall()
-	bCanUninstall = myPackage.canUninstall()
+	; this seems janky, and it is, but the canInstall() and canUninstall() logic on the package script isn't quite the same as whether or not a component can do things to a package
+	bCanInstall = myPackage.getEngine().getInstaller().canActOnPackage(myPackage)
+	bCanUninstall = myPackage.getEngine().getUninstaller().canActOnPackage(myPackage)
 	
 	Chronicle:Logger:Package.handlerStatus(self)
 EndFunction

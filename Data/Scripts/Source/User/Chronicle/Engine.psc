@@ -261,12 +261,20 @@ Function idleEventLogicLoop()
 	endif
 EndFunction
 
+Bool Function isActive()
+	return false
+EndFunction
+
 Bool Function canInstall()
 	return !IsRunning()
 EndFunction
 
 Function install()
 
+EndFunction
+
+Bool Function canRunUninstaller()
+	return false
 EndFunction
 
 Bool Function canUninstall()
@@ -446,6 +454,10 @@ State Active
 		idleEventLogicLoop()
 	EndFunction
 	
+	Bool Function isActive()
+		return true
+	EndFunction
+	
 	Bool Function installPackage(Chronicle:Package packageRef)
 		Chronicle:Engine:Component:Installer installerRef = getInstaller()
 		Bool bResult = queueForInstallLogic(packageRef)
@@ -486,27 +498,27 @@ State Teardown
 		endif
 	EndEvent
 	
-	Bool Function isIdle()
+	Bool Function canRunUninstaller()
 		return getInstaller().IsStopped() && getUpdater().IsStopped() && getPostload().IsStopped() && getUninstaller().isIdle()
 	EndFunction
 	
 	Function installerIdled()
 		decommissionInstaller()
-		if (isIdle())
+		if (canRunUninstaller())
 			getUninstaller().process()
 		endif
 	EndFunction
 	
 	Function updaterIdled()
 		decommissionUpdater()
-		if (isIdle())
+		if (canRunUninstaller())
 			getUninstaller().process()
 		endif
 	EndFunction
 	
 	Function postloadIdled()
 		decommissionPostload()
-		if (isIdle())
+		if (canRunUninstaller())
 			getUninstaller().process()
 		endif
 	EndFunction
@@ -546,6 +558,14 @@ State Decommissioned
 	Bool Function canInstall()
 		return false
 	EndFunction
+	
+	Bool Function canUninstall()
+		return false
+	EndFunction
+	
+	Function gameLoaded()
+		; no point any more
+	EndFunction
 EndState
 
 State FatalError
@@ -559,9 +579,8 @@ State FatalError
 		getUninstaller().sendFatalError()
 		getPostload().sendFatalError()
 		
+		FatalErrorMessage
 		Stop()
-		
-		FatalErrorMessage.Show()
 	EndEvent
 	
 	Function triggerFatalError()
