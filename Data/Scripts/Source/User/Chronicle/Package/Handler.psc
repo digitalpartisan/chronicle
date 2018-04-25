@@ -69,8 +69,10 @@ Function tokenReplacementLogic()
 	if (isValid())
 		replace("SelectedPackage", getPackage())
 		replace("InstalledVersion", getPackage().getVersionSetting())
+		replace("PackageDescription", getPackage().Description)
 	else
 		replace("SelectedPackage", InvalidPackageMessage) ; The terminal shouldn't show a replacement field in this case, but caution never hurt
-		replace("InstalledVersion", InvalidPackageMessage)
+		replace("InstalledVersion", None)
+		replace("PackageDescription", None)
 	endif
 EndFunction
