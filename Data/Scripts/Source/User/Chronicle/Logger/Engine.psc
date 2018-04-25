@@ -74,8 +74,16 @@ Bool Function logPackageTooOld(Chronicle:Engine engineRef, Chronicle:Package pac
 	return log(engineRef + " has determined " + packageRef + " is too old")
 EndFunction
 
-Bool Function logPackageToonew(Chronicle:Engine engineRef, Chronicle:package packageRef) Global
+Bool Function logPackageToonew(Chronicle:Engine engineRef, Chronicle:Package packageRef) Global
 	return log(engineRef + " has determined " + packageRef + " is too new")
+EndFunction
+
+Bool Function logMissingPackageRemoved(Chronicle:Engine engineRef, Chronicle:Package packageRef) Global
+	return log(engineRef + " has removed missing package " + packageRef)
+EndFunction
+
+Bool Function detectedMissingPackages(Chronicle:Engine engineRef) Global
+	return log(engineRef + " has detected missing packages")
 EndFunction
 
 Bool Function handlerReceivedEngine(Chronicle:Engine:Handler handlerRef, Chronicle:Engine engineRef) Global

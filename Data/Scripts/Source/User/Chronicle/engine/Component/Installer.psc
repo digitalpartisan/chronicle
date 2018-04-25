@@ -1,4 +1,5 @@
 Scriptname Chronicle:Engine:Component:Installer extends Chronicle:Engine:Component
+{When attaching this script to a quest record, do not check the "Start Game Enabled" box.}
 
 String sStateCoreInstall = "CoreInstall" Const
 String sStateProcessQueue = "ProcessQueue" Const

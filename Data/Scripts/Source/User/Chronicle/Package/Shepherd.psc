@@ -10,6 +10,10 @@ Function attemptInstallation()
 		return
 	endif
 	
+	if (!MyPackage.isEngineAccessible()) ; in case we're trying to install into a remote engine, make sure it actually exists where we can find it
+		return
+	endif
+	
 	Chronicle:Engine engineRef = MyPackage.getEngine()
 	if (!engineRef.isInstallerReady())
 		RegisterForCustomEvent(engineRef, "InstallerInitialized")
@@ -17,7 +21,6 @@ Function attemptInstallation()
 	endif
 	
 	if (MyPackage.requestInstallation())
-		;Chronicle:Logger:Package.logShepherdQueuePackage(self)
 		Stop()
 		return
 	endif

@@ -1,4 +1,5 @@
 Scriptname Chronicle:Engine:Component:Uninstaller extends Chronicle:Engine:Component
+{When attaching this script to a quest record, do not check the "Start Game Enabled" box.}
 
 String sStateProcessAll = "ProcessAll" Const
 String sStateProcessQueue = "ProcessQueue" Const
