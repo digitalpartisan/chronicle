@@ -1,4 +1,5 @@
 Scriptname Chronicle:Engine:Component:Postload extends Chronicle:Engine:Component
+{When attaching this script to a quest record, do not check the "Start Game Enabled" box.}
 
 String sStateProcessing = "Processing"
 
@@ -11,10 +12,13 @@ State Processing
 		Chronicle:Logger.logStateChange(self, asOldState)
 		
 		Chronicle:Package:Container packages = getEngine().getPackages()
+		Chronicle:package targetPackage = None
 		packages.rewind()
 		
 		while (packages.current())
-			packages.current().customPostloadBehavior()
+			targetPackage = packages.current()
+			Chronicle:Logger:Engine:Component.logProcessingPackage(self, targetPackage)
+			targetPackage.customPostloadBehavior()
 			packages.next()
 		endWhile
 		

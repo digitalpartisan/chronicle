@@ -1,5 +1,6 @@
 Scriptname Chronicle:Engine extends Quest
-{The central logic handler which controls all package management and collective installation / uninstallation behavior.}
+{The central logic handler which controls all package management and collective installation / uninstallation behavior.
+When attaching this to a Quest record, check the "Start Game Enabled" and the "Run Once" boxes.}
 
 CustomEvent InstallerInitialized
 CustomEvent InstallerDecommissioned
@@ -17,7 +18,7 @@ Group Environment
 	Chronicle:Package:Core Property CorePackage Auto Const Mandatory
 	{This is the core package for your plugin.  The engine needs to identify the core package for other packages in case they require a specific version.  The package this value holds is also unable to be installed under any circumstance.}
 	Bool Property AIOMode = false Auto Const
-	{When set to true, packages which are marked as being in the AIO release cannot be uninstalled at any point.}
+	{When set to true, packages which are marked as being in the AIO release cannot be uninstalled individually.}
 	Chronicle:Version:Static Property RequiredCompatibilityVersion Auto Const
 	{Setting this value will require all non-core packages to have a CoreCompatibilityVersion property setting of at least this value in order to install or update.}
 	Chronicle:Package:Container Property Packages Auto Const Mandatory
@@ -33,9 +34,13 @@ EndGroup
 
 Group Messaging
 	Message Property OldPackagesMessage Auto Const Mandatory
+	{The fallback message when a package is too old (see isPackageTooOld()) but has no corresponding message of its own.}
 	Message Property NewPackagesMessage Auto Const Mandatory
+	{The fallback message when a package is too new (see isPackageTooNew()) but has no corresponding message of its own.}
 	Message Property FatalErrorMessage Auto Const Mandatory
+	{The message shown when this engine encounters a fatal error and must stop operating.}
 	Message Property MissingPackagesMessage Auto Const Mandatory
+	{The message shown when installed packages go missing, usually as a result of the plugins containing them being removed w/o the packages themselves being uninstalled.}
 EndGroup
 
 String sStateDormant = "Dormant" Const
@@ -46,11 +51,11 @@ String sStateDecommissioned = "Decommissioned" Const
 String sStateFatalError = "FatalError" Const
 
 ; safeguards against spamming the player with these messages more than once per game load
-Bool bShownMissingPackagesMessage = false
 Bool bShownTooOldMessage = false
 Bool bShownTooNewMessage = false
 
 Bool Function isAIOModeActive()
+{Returns true when packages with their "InAIO" property set to true cannot be individually uninstalled and false otherwise.}
 	return AIOMode
 EndFunction
 
@@ -97,6 +102,7 @@ TLDR: the given package is intended to run against a newer version of the core p
 EndFunction
 
 Function notifyTooOld(Chronicle:Package:NonCore packageRef)
+{Uses the package's default "too old" message and falls back to the generic engine message if needed.}
 	if (packageRef.TooOldMessage)
 		packageRef.TooOldMessage.Show()
 	elseif (!bShownTooOldMessage)
@@ -106,6 +112,7 @@ Function notifyTooOld(Chronicle:Package:NonCore packageRef)
 EndFunction
 
 Function notifyTooNew(Chronicle:Package:NonCore packageRef)
+{Uses the package's default "too new" message and falls back to the generic engine message if needed.}
 	if (packageRef.TooNewMessage)
 		packageRef.TooNewMessage.Show()
 	elseif (!bShownTooNewMessage)
@@ -115,6 +122,7 @@ Function notifyTooNew(Chronicle:Package:NonCore packageRef)
 EndFunction
 
 Bool Function isPackageCompatible(Chronicle:Package packageRef)
+{Returns true when the given package is neither "too old" or "too new" and false otherwise.  See isPackageTooOld() and isPackageTooNew() for details.}
 	Chronicle:Package:NonCore nonCorePackage = packageRef as Chronicle:Package:NonCore
 	
 	if (nonCorePackage) ; only non-core packages can be considered too old or too new
@@ -236,6 +244,7 @@ Bool Function processComponent(Chronicle:Engine:Component componentRef)
 EndFunction
 
 Function idleEventLogicLoop()
+{This is half of the mutexing logic.  When a component goes idle during normal operation, this is the mechanism for determining whether or not something else needs to run.}
 	if (!isIdle())
 		return
 	endif
@@ -293,24 +302,16 @@ Function gameLoaded()
 	Chronicle:Logger:Engine.interceptedGameLoad(self)
 	
 	; only show the generic messages once per load
-	bShownMissingPackagesMessage = false
 	bShownTooOldMessage = false
 	bShownTooNewMessage = false
 	
-	if (!Packages.passesIntegrityCheck() && !bShownMissingPackagesMessage)
-		; log message
-		bShownMissingPackagesMessage = true
-		MissingPackagesMessage.Show()
-		triggerFatalError()
-	endif
-	
-	if (isIdle())
+	if (isIdle()) ; if no component is running when the game loads, run the updater immediately.  Otherwise, flag it as needing to run so that it runs the first chance it gets
 		getUpdater().process()
 	else
 		getUpdater().setNeedsProcessing()
 	endif
 	
-	getPostload().setNeedsProcessing()
+	getPostload().setNeedsProcessing() ; the postloader always needs to run in this case, so make sure it gets taken care of when possible
 EndFunction
 
 Bool Function queueForInstallLogic(Chronicle:Package packageRef)
@@ -334,6 +335,7 @@ Bool Function isIdle()
 EndFunction
 
 Event Chronicle:Engine:Component.Idled(Chronicle:Engine:Component componentRef, Var[] args)
+{This is the other half of the mutex logic.  When a component goes idle, the corresponding function is called and depending on the state the engine is in, different action can be taken.}
 	if (getInstaller() == componentRef)
 		Chronicle:Logger:Engine.logIdledInstaller(self)
 		installerIdled()
@@ -426,6 +428,7 @@ State Setup
 	EndEvent
 	
 	Function installerIdled()
+	{This is an example of what the engine might use the various component idled notifications for.}
 		GoToState(sStateActive)
 	EndFunction
 EndState
@@ -459,6 +462,7 @@ State Active
 	EndFunction
 	
 	Bool Function installPackage(Chronicle:Package packageRef)
+	{Note how this works.  If nothing else is happening and the installer needs to run, then it gets to run.}
 		Chronicle:Engine:Component:Installer installerRef = getInstaller()
 		Bool bResult = queueForInstallLogic(packageRef)
 	
@@ -470,9 +474,10 @@ State Active
 	EndFunction
 	
 	Bool Function uninstallPackage(Chronicle:Package packageRef)
+	{Also note the same logic herein as installPackage().  If the engine is otherwise idle, then fire up the uninstaller right away since that allows the most rapid service of the package uninstallation.}
 		Chronicle:Engine:Component:Uninstaller uninstallerRef = getUninstaller()
 		Bool bResult = queueForUninstallLogic(packageRef)
-	
+		
 		if (uninstallerRef.needsProcessing() && isIdle())
 			uninstallerRef.process()
 		endif
@@ -481,7 +486,7 @@ State Active
 	EndFunction
 	
 	Function uninstall()
-		if (canUninstall())
+		if (canUninstall()) ; make sure that the engine isn't busy with anything prior to attempting to uninstall itself
 			GoToState(sStateTeardown)
 		endif
 	EndFunction
@@ -524,8 +529,10 @@ State Teardown
 	EndFunction
 	
 	Function uninstallerIdled()
-		decommissionUninstaller()
-		Stop()
+		if (canRunUninstaller()) ; just in case there is some unknown edge-condition where the uninstaller is already running from having queued items (as opposed to uninstalling everything.)
+			decommissionUninstaller()
+			Stop()
+		endif
 	EndFunction
 	
 	Bool Function installPackage(Chronicle:Package packageRef)

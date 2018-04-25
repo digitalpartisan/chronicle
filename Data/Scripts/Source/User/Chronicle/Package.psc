@@ -1,5 +1,5 @@
 Scriptname Chronicle:Package extends Quest Hidden
-{This is the main package logic.}
+{This is the main package logic.  When attaching this to a Quest record in the editor, do not check the "Start Game Enabled" box.}
 
 CustomEvent InstallComplete
 CustomEvent InstallFailed

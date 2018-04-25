@@ -19,18 +19,32 @@ Int Function getSize()
 	return MyPackages.Length
 EndFunction
 
-Bool Function passesIntegrityCheck()
-	Int iCounter = 0
-	Int iSize = getSize()
+Bool Function isPackageIntact(Chronicle:Package packageRef)
+{Used to tell if a package might have been unexpectedly removed (usually due to the plugin providing it have been taken out of the load order.)}
+	return packageRef && packageRef.getCurrentVersion()
+EndFunction
+
+Bool Function maintainIntegrity()
+{Returns true if damaged and/or missing packages were removed in an attempt to keep the container's contents sane and false otherwise.}
+	Bool bResult = false
 	
-	while (iCounter < iSize)
-		if (!MyPackages[iCounter])
-			return false
+	Chronicle:Engine engineRef = getCorePackage().getEngine()
+	rewind(true) ; if the core package is missing, well, a mod author royally screwed up, so... IDK?
+	Chronicle:Package packageRef = current()
+	
+	while (packageRef)
+		if (isPackageIntact(packageRef)) ; if the current package is intact, then proceed to the next one in the container
+			next()
+		else ; if the current package is not intact, then remove it
+			bResult = true
+			Chronicle:Logger:Engine.logMissingPackageRemoved(engineRef, packageRef)
+			removeCurrent()
 		endif
-		iCounter += 1
-	endwhile
+		
+		packageRef = current() ; this works because the container's internal pointer is looking at the next package either way
+	endWhile
 	
-	return true
+	return bResult
 EndFunction
 
 Bool Function isIndexValid(Int iIndex)

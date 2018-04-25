@@ -5,6 +5,12 @@ When started, this script will perform the associated update logic as defined in
 CustomEvent Success
 CustomEvent Failure
 
+Chronicle:Package Property MyPackage Auto Const Mandatory
+
+Chronicle:Package Function getPackage()
+	return MyPackage
+EndFunction
+
 Function sendSuccess()
 {Call this in your custom updateLogic() function to indicate the update is complete.}
 	Stop()

@@ -1,4 +1,5 @@
 Scriptname Chronicle:Engine:Paginator extends DynamicTerminal:Paginator Conditional
+{Used to display a list of engines in a terminal.  Not generally useful unless there are multiple engines in a plugin.}
 
 Chronicle:Engine:Handler Property EngineHandler Auto Const Mandatory
 

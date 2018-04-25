@@ -1,4 +1,5 @@
 Scriptname Chronicle:Engine:Handler extends DynamicTerminal:Basic Conditional
+{Used to display information in a terminal about the engine passed in to setEngine().}
 
 Message Property InvalidEngineMessage Auto Const Mandatory
 {The message to display in the terminal if an invalid engine is specified.}

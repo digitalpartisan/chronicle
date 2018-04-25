@@ -1,5 +1,7 @@
 Scriptname Chronicle:Engine:Component:Updater extends Chronicle:Engine:Component
+{When attaching this script to a quest record, do not check the "Start Game Enabled" box.}
 
+String sStateIntegrityCheck = "IntegrityCheck" Const
 String sStateCoreUpdate = "CoreUpdate" Const
 String sStatePackageUpdates = "PackageUpdates" Const
 
@@ -27,7 +29,7 @@ Function stopObservingPackageUpdate()
 EndFunction
 
 Function goToProcessingState()
-	GoToState(sStateCoreUpdate)
+	GoToState(sStateIntegrityCheck)
 EndFunction
 
 Bool Function canActOnPackage(Chronicle:Package targetPackage)
@@ -56,6 +58,24 @@ Event Chronicle:Package.UpdateFailed(Chronicle:Package packageRef, Var[] args)
 	
 	sendFatalError()
 EndEvent
+
+; this exists here because it manipulates the contents of the engine's package container, so it must occur in a mutexed component (as it is not thread safe)
+; and the updater is the most likely component to run immediately after a save is loaded since the odds of another component running at the same time is near zero.
+State IntegrityCheck
+	Event OnBeginState(String asOldState)
+		Chronicle:Logger.logStateChange(self, asOldState)
+		
+		Chronicle:Engine engineRef = getEngine()
+		Chronicle:Package:Container packages = engineRef.GetPackages()
+		
+		if (packages.maintainIntegrity())
+			Chronicle:Logger:Engine.detectedMissingPackages(engineRef)
+			engineRef.MissingPackagesMessage.Show()
+		endif
+		
+		GoToState(sStateCoreUpdate)
+	EndEvent
+EndState
 
 State CoreUpdate
 	Event OnBeginState(String asOldState)
