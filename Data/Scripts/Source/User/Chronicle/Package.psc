@@ -20,14 +20,14 @@ EndGroup
 Group Messaging
 	Message Property Description Auto Const Mandatory
 	{Used to explain the functionality of this package to the user when it is needed.  Required because this information may matter to the user.}
-	Message Property InstallationMessage Auto Const
-	{Shown to the player when this package is installed, provided it is set.}
-	Message Property UpdateMessage Auto Const
-	{Shown to the player when this package is updated, provided it is set.}
-	Message Property UninstallationMessage Auto Const
-	{Shown to the player when this package is uninstalled, provided it is set.}
 	Message Property FatalErrorMessage Auto Const
 	{Used when something catastrophic happens so that the user knows the package has shut itself down, provided it is set.}
+	Message Property InstallationMessage Auto Const
+	{Shown to the player when this package is installed, provided it is set.}
+	Message Property UninstallationMessage Auto Const
+	{Shown to the player when this package is uninstalled, provided it is set.}
+	Message Property UpdateMessage Auto Const
+	{Shown to the player when this package is updated, provided it is set.}
 EndGroup
 
 Chronicle:Package:CustomBehavior Property MyCustomizations Auto Const
@@ -141,6 +141,10 @@ Bool Function canInstall()
 	return canInstallLogic()
 EndFunction
 
+Function triggerFatalError()
+	GoToState(sStateFatalError)
+EndFunction
+
 Function sendInstallComplete()
 	SendCustomEvent("InstallComplete")
 	GoToState(sStateIdle)
@@ -148,7 +152,7 @@ EndFunction
 
 Function sendInstallFailed()
 	SendCustomEvent("InstallFailed")
-	GoToState(sStateFatalError)
+	triggerFatalError()
 EndFunction
 
 Bool Function canUninstall()

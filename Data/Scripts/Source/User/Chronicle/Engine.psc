@@ -586,7 +586,7 @@ State FatalError
 		getUninstaller().sendFatalError()
 		getPostload().sendFatalError()
 		
-		FatalErrorMessage
+		FatalErrorMessage.Show()
 		Stop()
 	EndEvent
 	

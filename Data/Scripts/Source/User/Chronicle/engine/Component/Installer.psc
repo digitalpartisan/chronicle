@@ -52,6 +52,7 @@ Event Chronicle:Package.InstallComplete(Chronicle:Package packageRef, Var[] args
 			postProcessingBehavior()
 		else
 			Chronicle:Logger:Engine:Component.logPackageNotAddedToContainer(self, targetRef)
+			targetRef.triggerFatalError()
 			sendFatalError()
 		endif
 	else

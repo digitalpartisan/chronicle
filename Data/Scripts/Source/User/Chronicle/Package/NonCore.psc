@@ -9,10 +9,10 @@ EndGroup
 Group CompatabilitySettings
 	Chronicle:Version:Static Property CoreCompatibilityVersion Auto Const
 	{The minimum version of the Core package, if any, this package requires to function.  See the Chronicle:Engine script for details.}
-	Message Property TooOldMessage Auto Const
-	{The message displayed when this package's CoreCompatibilityVersion value is below the engine's required version.  I.e. what to tell the player when the mod providing this package isn't up to date.}
 	Message Property TooNewMessage Auto Const
 	{The message displayed when this package's CoreCompatibilityVersion value is higher than the Core Package's version setting.  I.e. what to tell the player when the mod providing the core package isn't up to date.}
+	Message Property TooOldMessage Auto Const
+	{The message displayed when this package's CoreCompatibilityVersion value is below the engine's required version.  I.e. what to tell the player when the mod providing this package isn't up to date.}
 EndGroup
 
 Chronicle:Engine myEngine = None
