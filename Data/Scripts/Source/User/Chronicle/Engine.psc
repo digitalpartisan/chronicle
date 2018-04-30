@@ -390,16 +390,6 @@ Function stopObservingComponents()
 	stopObservingComponent(getPostload())
 EndFunction
 
-Event OnQuestInit()
-	Chronicle:Logger.logInvalidStartupAttempt(self)
-	triggerFatalError()
-EndEvent
-
-Event OnQuestShutdown()
-	Chronicle:Logger.logInvalidShutdownAttempt(self)
-	triggerFatalError()
-EndEvent
-
 Auto State Dormant
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
@@ -593,10 +583,6 @@ State FatalError
 	Function triggerFatalError()
 		; prevents junk log messages and state changes
 	EndFunction
-	
-	Event OnQuestShutdown()
-		; prevents junk log messages and state changes
-	EndEvent
 	
 	Bool Function installPackage(Chronicle:Package packageRef)
 		return false
