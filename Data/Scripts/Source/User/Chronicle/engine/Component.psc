@@ -121,16 +121,6 @@ Function startupBehavior()
 	GoToState(sStateIdle)
 EndFunction
 
-Event OnQuestInit()
-	Chronicle:Logger.logInvalidStartupAttempt(self)
-	sendFatalError()
-EndEvent
-
-Event OnQuestShutdown()
-	Chronicle:Logger.logInvalidShutdownAttempt(self)
-	sendFatalError()
-EndEvent
-
 Auto State Dormant
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)

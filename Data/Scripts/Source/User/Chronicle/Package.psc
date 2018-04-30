@@ -259,15 +259,19 @@ Function sendUninstallFailed()
 	GoToState(sStateFatalError)
 EndFunction
 
-Event OnQuestInit()
-	Chronicle:Logger.logInvalidStartupAttempt(self)
-	GoToState(sStateFatalError)
-EndEvent
-
-Event OnQuestShutdown()
-	Chronicle:Logger.logInvalidShutdownAttempt(self)
-	GoToState(sStateFatalError)
-EndEvent
+Chronicle:Version:Static Function getLowestVersion(Chronicle:Version limit = None)
+	Chronicle:Version:Static targetVersion = getVersionSetting()
+	
+	while (targetVersion.getPreviousVersion())
+		if (limit.equals(targetVersion))
+			return targetVersion
+		endif
+		
+		targetVersion = targetVersion.getPreviousVersion()
+	endWhile
+	
+	return targetVersion
+EndFunction
 
 Auto State Dormant
 	Event OnBeginState(String asOldState)
@@ -365,18 +369,14 @@ State Updating
 		nextVersion = None
 		
 		Chronicle:Version:Stored current = getCurrentVersion()
-		Chronicle:Version:Static currentMatch = getVersionSetting()
+		Chronicle:Version:Static lowestVersion = getLowestVersion(current)
 		
-		while (currentMatch && currentMatch.greaterThan(current))
-			currentMatch = currentMatch.getPreviousVersion()
-		endwhile
-		
-		if (!currentMatch || currentMatch.lessThan(current))
+		if (!lowestVersion || lowestVersion.lessThan(current))
 			Chronicle:Logger:Package.versionConfigurationError(self)
 			return false
 		endif
 		
-		nextVersion = currentMatch.getNextVersion() ; because we don't need to run the update that puts this package at the current version, but we do need to run the next one
+		nextVersion = lowestVersion.getNextVersion() ; because we don't need to run the update that puts this package at the current version, but we do need to run the next one
 		Chronicle:Logger:Package.identifiedNextVersion(self, nextVersion)
 		
 		return true
@@ -425,10 +425,6 @@ State Decommissioned
 		Chronicle:Logger.logStateChange(self, asOldState)
 		Stop()
 	EndEvent
-	
-	Event OnQuestShutdown()
-		
-	EndEvent
 EndState
 
 State FatalError
@@ -436,13 +432,5 @@ State FatalError
 		Chronicle:Logger.logStateChange(self, asOldState)
 		showMessageIfSet(FatalErrorMessage)
 		Stop()
-	EndEvent
-	
-	Event OnQuestInit()
-	
-	EndEvent
-	
-	Event OnQuestShutdown()
-	
 	EndEvent
 EndState
