@@ -1,4 +1,7 @@
 Scriptname Chronicle:Package:Container extends Quest
+{Objects of this type are used by engines to maintain a list of all installed packages.  This script wraps an array of packages in an iterator for convenient navigation by components going about their work.
+This script also implements an integrity / sanity check which will remove plugins from the array if they suddenly go missing (which is almost always due to someone not properly uninstalling a package
+before removing the plugin it came in.)}
 
 Chronicle:Package[] MyPackages
 

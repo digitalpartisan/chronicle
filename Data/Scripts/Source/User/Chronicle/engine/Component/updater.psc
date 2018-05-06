@@ -1,5 +1,6 @@
 Scriptname Chronicle:Engine:Component:Updater extends Chronicle:Engine:Component
-{When attaching this script to a quest record, do not check the "Start Game Enabled" box.}
+{The Updater does not process a queue so much as it inspects existing packages for unprocessed version increases as well as performing ongoing compatability checks.
+The updater also performs integrity checks on the packages in the package container before attempting to update any of them.  The the state IntegrityCheck for details.}
 
 String sStateIntegrityCheck = "IntegrityCheck" Const
 String sStateCoreUpdate = "CoreUpdate" Const
@@ -29,6 +30,8 @@ Function stopObservingPackageUpdate()
 EndFunction
 
 Function goToProcessingState()
+{This particular component type first checks the integrity of packages already installed to make sure that packages which have mysteriously gone missing
+due to things like plugins being wrongly removed from the load order are not acted on by the updater or any other component.  That would be double plus ungood.}
 	GoToState(sStateIntegrityCheck)
 EndFunction
 
@@ -60,7 +63,7 @@ Event Chronicle:Package.UpdateFailed(Chronicle:Package packageRef, Var[] args)
 EndEvent
 
 ; this exists here because it manipulates the contents of the engine's package container, so it must occur in a mutexed component (as it is not thread safe)
-; and the updater is the most likely component to run immediately after a save is loaded since the odds of another component running at the same time is near zero.
+; and the updater is the most likely component to run immediately after a save is loaded since the odds of another component running at the time of a game save is near zero.
 State IntegrityCheck
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
@@ -103,7 +106,7 @@ State PackageUpdates
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
 
-		getEngine().getPackages().rewind(true) ; set the pointer to the first package after the core package (since it's been taken care of)
+		getEngine().getPackages().rewind(true) ; set the pointer to the first package after the core package (since it's been taken care of already)
 		processNextPackage()
 	EndEvent
 	
@@ -115,12 +118,12 @@ State PackageUpdates
 		Chronicle:Package targetRef = getTargetPackage()
 		Chronicle:Engine engineRef = getEngine()
 		
-		if (!targetRef)
+		if (!targetRef) ; because this is a recursive process (see the final else case below,) it needs a way to stop itself.  Running out of packages is that way.
 			setToIdle()
-		elseif (engineRef.isPackageCompatible(targetRef) && canActOnPackage(targetRef))
+		elseif (engineRef.isPackageCompatible(targetRef) && canActOnPackage(targetRef)) ; this check runs the compatability logic even if no update is detected because of the order of the boolean conditions
 			observePackageUpdate()
 			targetRef.update()
-		else
+		else ; either the updater can't run on the current package or no update is required, so move on
 			engineRef.getPackages().next()
 			processNextPackage()
 		endif

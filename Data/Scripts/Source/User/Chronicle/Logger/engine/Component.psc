@@ -62,3 +62,7 @@ EndFunction
 Bool Function logPackageNotAddedToContainer(Chronicle:Engine:Component componentRef, Chronicle:Package packageRef) Global
 	return error(componentRef + " could not add package " + packageRef + " to container")
 EndFunction
+
+Bool Function logPackageNotRemovedFromContainer(Chronicle:Engine:Component componentRef, Chronicle:Package packageRef) Global
+	return error(componentRef + " could not remove package " + packageRef + " from container")
+EndFunction

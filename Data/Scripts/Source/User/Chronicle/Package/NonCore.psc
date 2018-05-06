@@ -1,9 +1,13 @@
 Scriptname Chronicle:Package:NonCore extends Chronicle:Package
+{This is }
 
 Group EnvironmentProperties
 	Chronicle:Package:EngineWrapper Property MyEngineWrapper Auto Const Mandatory
+	{How the non-core packages access their engine.  See the Chronicle:Package:EngineWrapper script and its children for the relevant details.
+	The purpose in forcing non-core packages to use this accessor is that a non-core package could exist in a plugin which does not depend on the plugin containing its engine.
+	This opens up the possibility that one plugin using Chronicle could have a third-party plugin provide additional packages enhacning the functionality of that engine.}
 	Bool Property InAIO = false Auto Const
-	{Set this to true if this package will be included in some sort of All-in-One package so that it cannot be uninstalled.}
+	{Set this to true if this package will be included in some sort of All-in-One package so that it cannot be uninstalled on its own.}
 EndGroup
 
 Group CompatabilitySettings

@@ -1,5 +1,8 @@
 Scriptname Chronicle:Engine:Handler extends DynamicTerminal:Basic Conditional
-{Used to display information in a terminal about the engine passed in to setEngine().}
+{Use of this script requires the latest version of the Dynamic Terminal library.  The handler is used to detect the state of an engine provided to setEngine() and to populate
+some conditional variables so that a terminal concerned with said engine state can accurately display important information and options to the user.
+This script and its behaviors are not sctrictly required to use Chronicle.
+For examples of how to use this script in a terminal, reference the Chronicle Testing plugin provided with Chronicle.}
 
 Message Property InvalidEngineMessage Auto Const Mandatory
 {The message to display in the terminal if an invalid engine is specified.}

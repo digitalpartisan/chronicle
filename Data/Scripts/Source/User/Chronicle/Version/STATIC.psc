@@ -1,7 +1,8 @@
 Scriptname Chronicle:Version:Static extends Chronicle:Version Conditional
 {Accepts segment values from the editor and provides them as needed.  Useful for creating an object that identifies a specific version value for later reference and display.
 It is strongly recommended that quest objects with this script attached be named for the value string they contain.
-It is strongly recommended that you not check the "Start Game Enabled" but do check the "Run Once" box as you deem appropriate.  The quest startup and shutdown behavior can be used to perform updates when a particular version is upgraded to which should not be repeated at any point.}
+It is strongly recommended that you not check the "Start Game Enabled" but do check the "Run Once" box as you deem appropriate.
+The quest startup and shutdown behavior can be used to perform updates when a particular version is upgraded to which should not be repeated at any point.}
 
 Group ValueSettings
 	Int Property Major = 0 Auto Const Mandatory
