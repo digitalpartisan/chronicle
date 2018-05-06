@@ -7,6 +7,8 @@ and then it will shut down.}
 Chronicle:Package:NonCore Property MyPackage Auto Const Mandatory
 {Note the script type.  Core packages do not need a shepherd}
 
+Bool bListening = false ; to avoid reregistering for the installer initialization event upon game load
+
 Chronicle:Package:NonCore Function getPackage()
 	return MyPackage
 EndFunction
@@ -26,9 +28,10 @@ Function attemptInstallation()
 	endif
 	
 	Chronicle:Engine engineRef = packageRef.getEngine()
-	if (!engineRef.isInstallerReady())
+	if (!engineRef.isInstallerReady() && !bListening)
 		Chronicle:Logger:Package:Shepherd.logListeningForInstallerReady(self)
 		RegisterForCustomEvent(engineRef, "InstallerInitialized")
+		bListening = true
 		return
 	endif
 	
@@ -54,6 +57,7 @@ Event Chronicle:Engine.InstallerInitialized(Chronicle:Engine akSender, Var[] arg
 	if (getPackage().getEngine() == akSender)
 		Chronicle:Logger:Package:Shepherd.logNotListeningForInstallerReady(self)
 		UnregisterForCustomEvent(akSender, "InstallerInitialized")
+		bListening = false
 		attemptInstallation()
 	endif
 EndEvent
