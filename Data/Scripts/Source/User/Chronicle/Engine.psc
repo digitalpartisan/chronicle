@@ -333,7 +333,7 @@ EndFunction
 
 Bool Function installPackage(Chronicle:Package packageRef)
 {The function called when an outside entity (such as a package shepherd) wants to install a package.}
-	return false
+	return queueForInstallLogic(packageRef)
 EndFunction
 
 Bool Function queueForUninstallLogic(Chronicle:Package packageRef)
@@ -342,7 +342,7 @@ EndFunction
 
 Bool Function uninstallPackage(Chronicle:Package packageRef)
 {This serves the same purpose as installPackage() except for uninstallation of packages.}
-	return false
+	return queueForUninstallLogic(packageRef)
 EndFunction
 
 Bool Function isIdle()
@@ -498,10 +498,6 @@ State Active
 		if (canUninstall()) ; make sure that the engine isn't busy with anything prior to attempting to shut itself down
 			GoToState(sStateTeardown)
 		endif
-	EndFunction
-	
-	Function gameLoaded()
-		; no point any more, this function is redefined here because should a game save happen while the engine is waiting in this state, running updates and post-load behaviors shouldn't happen
 	EndFunction
 EndState
 
