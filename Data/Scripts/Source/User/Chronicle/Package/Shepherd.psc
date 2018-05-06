@@ -1,7 +1,11 @@
 Scriptname Chronicle:Package:Shepherd extends Quest
-{This script shepherds a package to its engine based on whether or not the package can be installed either when this shepherd runs for the first time or when the game is loaded at some point in the future.}
+{A shepherd is responsible for "shepherding" a non-core package to its engine when the engine is ready to receive non-core packages to install.
+For this reason, the quest object you attach this script to should have the "Start Game Enabled" and "Run Once" boxes checked.  The shepherd will
+observe both game load events and (if the engine is accessible) installer initialization events until it is able to queue the package for installation
+and then it will shut down.}
 
 Chronicle:Package:NonCore Property MyPackage Auto Const Mandatory
+{Note the script type.  Core packages do not need a shepherd}
 
 Chronicle:Package:NonCore Function getPackage()
 	return MyPackage

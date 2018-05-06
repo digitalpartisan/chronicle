@@ -1,5 +1,6 @@
 Scriptname Chronicle:Version extends Quest Hidden Conditional
-{Core version logic.  Getter/setter interface definitions and comparison logic. Extensions of this script are expected to implement getter/setter logic as is appropriate for their functionality.}
+{Core version logic.  Getter/setter interface definitions and comparison logic. Extensions of this script are expected to implement getter/setter logic as is appropriate for their functionality.
+No child of this script should be marked "Start Game Enabled" since that stands a good chance of running updates for no reason whatsoever.}
 
 Int Function getMajor()
 {Returns the value of the major segment of the version number.}

@@ -1,5 +1,6 @@
 Scriptname Chronicle:Engine:Component:Uninstaller extends Chronicle:Engine:Component
-{When attaching this script to a quest record, do not check the "Start Game Enabled" box.}
+{This is the package uninstaller.  Note the lack of a core-specific state.  Either a queue is being processed, or every single installed package is being uninstalled in opposite order of installation.
+A core package cannot be uninstalled except in the case of a full engine uninstallation.}
 
 String sStateProcessAll = "ProcessAll" Const
 String sStateProcessQueue = "ProcessQueue" Const
@@ -62,7 +63,7 @@ Event Chronicle:Package.UninstallComplete(Chronicle:Package packageRef, Var[] ar
 		if (removePackageFromContainer(targetRef))
 			postProcessingBehavior()
 		else
-			;Chronicle:Logger:Engine:Component.logNoRemove(self, targetRef)
+			Chronicle:Logger:Engine:Component.logPackageNotRemovedFromContainer(self, targetRef)
 			sendFatalError()
 		endif
 	else
@@ -95,7 +96,7 @@ EndFunction
 State ProcessAll
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
-		getEngine().getPackages().fastForward() ; start at the end of the package list since this is more or less an "undo" process
+		getEngine().getPackages().fastForward() ; start at the end of the package list since this is an "undo" process
 		processNextPackage()
 	EndEvent
 	

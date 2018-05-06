@@ -7,7 +7,6 @@
 	"Data\\Scripts\\Chronicle\\engine\\Handler.pex",
 	"Data\\Scripts\\Chronicle\\engine\\LoadDetector.pex",
 	"Data\\Scripts\\Chronicle\\engine\\PackageList.pex",
-	"Data\\Scripts\\Chronicle\\engine\\PackagePaginator.pex",
 	"Data\\Scripts\\Chronicle\\engine\\Paginator.pex",
 	"Data\\Scripts\\Chronicle\\Engine.pex",
 	"Data\\Scripts\\Chronicle\\Logger\\engine\\Component.pex",

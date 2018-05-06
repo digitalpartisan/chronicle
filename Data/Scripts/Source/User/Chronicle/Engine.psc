@@ -1,6 +1,10 @@
 Scriptname Chronicle:Engine extends Quest
 {The central logic handler which controls all package management and collective installation / uninstallation behavior.
-When attaching this to a Quest record, check the "Start Game Enabled" and the "Run Once" boxes.}
+When attaching this to a Quest record, check the "Start Game Enabled" and the "Run Once" boxes.
+The engine is the "go to" source of all information about the environment and environmental settings such as which package is the core,
+the entire package set, the various components that do work on the package list, etc.  All requests to install or uninstall packages come through
+the engine and the engine is responsible for handling game load events as well as communicating to individual components when they may and may not
+execute or if a fatal error has occurred somewhere in some component's process.}
 
 CustomEvent InstallerInitialized
 CustomEvent InstallerDecommissioned
@@ -143,6 +147,7 @@ Bool Function isPackageCompatible(Chronicle:Package packageRef)
 EndFunction
 
 Chronicle:Package:Container Function getPackages()
+{Because every component needs this information, the engine is the object of record for the state of the overall system.}
 	return Packages
 EndFunction
 
@@ -165,7 +170,7 @@ Function decommissionInstaller()
 EndFunction
 
 Function installerIdled()
-	
+{This function is called by event handlers to inform the engine that the installer component has concluded its behavior.  See its definition in various states for an understanding of what this might mean.}
 EndFunction
 
 Chronicle:Engine:Component:Updater Function getUpdater()
@@ -187,7 +192,7 @@ Function decommissionUpdater()
 EndFunction
 
 Function updaterIdled()
-
+{This is similar to installerIdled() except that it refers to the updater component rather than the installer.}
 EndFunction
 
 Chronicle:Engine:Component:Uninstaller Function getUninstaller()
@@ -209,7 +214,7 @@ Function decommissionUninstaller()
 EndFunction
 
 Function uninstallerIdled()
-
+{This is similar to installerIdled() except that it refers to the uninstaller component rather than the installer.}
 EndFunction
 
 Chronicle:Engine:Component:Postload Function getPostload()
@@ -231,10 +236,11 @@ Function decommissionPostload()
 EndFunction
 
 Function postloadIdled()
-
+{This is similar to installerIdled() except that it refers to the postload component rather than the installer.}
 EndFunction
 
 Bool Function processComponent(Chronicle:Engine:Component componentRef)
+{This seems trivially simple, except that if a particular component needs to be processed, the boolean result informs the calling function that no other component should be considered to run while componentRef is not idle.}
 	if (componentRef.needsProcessing())
 		componentRef.process()
 		return true
@@ -244,19 +250,19 @@ Bool Function processComponent(Chronicle:Engine:Component componentRef)
 EndFunction
 
 Function idleEventLogicLoop()
-{This is half of the mutexing logic.  When a component goes idle during normal operation, this is the mechanism for determining whether or not something else needs to run.}
+{This is half of the mutexing logic.  When a component goes idle during normal operation, this is the mechanism for determining whether or not something else needs to run.
+Note the use of processComponent() and the order in which the components are examined.  There's a method to the madness.  See comments in the function itself for details.}
 	if (!isIdle())
 		return
 	endif
 	
-	; these component calls are listed in the order of preference once the engine is initialized and a game is loaded.
-	; the updates should run first since it is possible that ongoing problems are corrected therein.
-	; the postload behavior should run last because it is the least likely to affect critical functionality and it does not need to be thread safe
-	
+	; Because the updates can contain bugfixes, they should run first.  Those bugfixes may be critical to operating every other component correctly.
 	if (processComponent(getUpdater()))
 		return
 	endif
 	
+	; Really, the uninstaller and the installer are tied for priority in this process, so the preference was given to installing new packages and enabling their functionality first
+	; since that may make everything else work a little bit better.
 	if (processComponent(getInstaller()))
 		return
 	endif
@@ -265,6 +271,8 @@ Function idleEventLogicLoop()
 		return
 	endif
 	
+	; The installed packages' post-load behaviors should only run once any packages to be uninstalled are removed so that there is less work to do at this phase of the logic loop.
+	; Admittedly, the timing isn't critical, but it's practical to make sure as little work is done as possible because that means there are fewer opportunities for various failure events to occur.
 	if (processComponent(getPostload()))
 		return
 	endif
@@ -279,7 +287,8 @@ Bool Function canInstall()
 EndFunction
 
 Function install()
-
+{This is the "start it up" function that is called when the quest object housing the engine is started.
+This should almost always happen automatically because the "Start Game Enabled" box should be checked unless there is a good reason not to do so.}
 EndFunction
 
 Bool Function canRunUninstaller()
@@ -291,7 +300,7 @@ Bool Function canUninstall()
 EndFunction
 
 Function uninstall()
-
+{This is the "shut it down" function called to remove all packages and cause the engine to stop functioning.}
 EndFunction
 
 Function triggerFatalError()
@@ -299,6 +308,10 @@ Function triggerFatalError()
 EndFunction
 
 Function gameLoaded()
+{This is what happens when the game is loaded.  The most important thing done here is to force the updater component to require processing so that packages updates happen as soon as possible.
+The postload component is also forced to run (when able) so that packges have an opportunity to examine what may or may not have changed in the game since the last time it was loaded.
+Strictly speaking, this should have been defined as empty here and these contents would be applicable only to the Active state, but it is possible for a mod author to retrofit their mod
+with Chronicle and a game load event might need to run on a quest object which has already been started and has no opportunity to move through the normal setup process.}
 	Chronicle:Logger:Engine.interceptedGameLoad(self)
 	
 	; only show the generic messages once per load
@@ -319,7 +332,8 @@ Bool Function queueForInstallLogic(Chronicle:Package packageRef)
 EndFunction
 
 Bool Function installPackage(Chronicle:Package packageRef)
-	return queueForInstallLogic(packageRef)
+{The function called when an outside entity (such as a package shepherd) wants to install a package.}
+	return false
 EndFunction
 
 Bool Function queueForUninstallLogic(Chronicle:Package packageRef)
@@ -327,15 +341,19 @@ Bool Function queueForUninstallLogic(Chronicle:Package packageRef)
 EndFunction
 
 Bool Function uninstallPackage(Chronicle:Package packageRef)
-	return queueForUninstallLogic(packageRef)
+{This serves the same purpose as installPackage() except for uninstallation of packages.}
+	return false
 EndFunction
 
 Bool Function isIdle()
+{Certain things (such as shutting down the entire engine) can only happen when nothing else is going on for thread safety reasons.
+For details, search for calls to this function.}
 	return getInstaller().isIdle() && getUpdater().isIdle() && getUninstaller().isIdle()
 EndFunction
 
 Event Chronicle:Engine:Component.Idled(Chronicle:Engine:Component componentRef, Var[] args)
-{This is the other half of the mutex logic.  When a component goes idle, the corresponding function is called and depending on the state the engine is in, different action can be taken.}
+{This is the other half of the mutex logic.  When a component goes idle, the corresponding function is called and depending on the state the engine is in, different action can be taken.
+For details regarding why this is important, see the various definitions of the component idled functions in the various states of this script.}
 	if (getInstaller() == componentRef)
 		Chronicle:Logger:Engine.logIdledInstaller(self)
 		installerIdled()
@@ -396,6 +414,7 @@ Auto State Dormant
 	EndEvent
 	
 	Event OnQuestInit()
+		; an engine cannot start up if any of the components is already operating
 		if (getInstaller().isDormant() && getUpdater().isDormant() && getUninstaller().isDormant() && getPostload().isDormant())
 			observeComponents()
 			GoToState(sStateSetup)
@@ -418,7 +437,7 @@ State Setup
 	EndEvent
 	
 	Function installerIdled()
-	{This is an example of what the engine might use the various component idled notifications for.}
+	{This is an example of what the engine might use the various component idled notifications for.  When the installer is done running for the first time, setup is done.}
 		GoToState(sStateActive)
 	EndFunction
 EndState
@@ -464,7 +483,7 @@ State Active
 	EndFunction
 	
 	Bool Function uninstallPackage(Chronicle:Package packageRef)
-	{Also note the same logic herein as installPackage().  If the engine is otherwise idle, then fire up the uninstaller right away since that allows the most rapid service of the package uninstallation.}
+	{Also note the same logic herein as installPackage().  If the engine is otherwise idle, then fire up the uninstaller right away since that allows the most rapid fulfillment of the package uninstallation request.}
 		Chronicle:Engine:Component:Uninstaller uninstallerRef = getUninstaller()
 		Bool bResult = queueForUninstallLogic(packageRef)
 		
@@ -476,15 +495,21 @@ State Active
 	EndFunction
 	
 	Function uninstall()
-		if (canUninstall()) ; make sure that the engine isn't busy with anything prior to attempting to uninstall itself
+		if (canUninstall()) ; make sure that the engine isn't busy with anything prior to attempting to shut itself down
 			GoToState(sStateTeardown)
 		endif
+	EndFunction
+	
+	Function gameLoaded()
+		; no point any more, this function is redefined here because should a game save happen while the engine is waiting in this state, running updates and post-load behaviors shouldn't happen
 	EndFunction
 EndState
 
 State Teardown
 	Event OnBeginState(String asOldState)
 		Chronicle:Logger.logStateChange(self, asOldState)
+		; strictly speaking, the logic in the active state should only progress to this point if the engine truly is idle,
+		; but timing issues and race conditions could mess things up.  It's best to check before decommissioning components that might be running.
 		if (isIdle())
 			decommissionInstaller()
 			decommissionUpdater()
@@ -494,6 +519,8 @@ State Teardown
 	EndEvent
 	
 	Bool Function canRunUninstaller()
+	{This is a fallback to the logic in the OnBeginState() event so that any running components have an opportunity to correctly finish before the uninstaller is make to run.
+	The uninstaller component needs to run last because once it is finished, teardown is over and any jobs left undone or requests left unfulfilled may do bad things to the player's save game file.}
 		return getInstaller().IsStopped() && getUpdater().IsStopped() && getPostload().IsStopped() && getUninstaller().isIdle()
 	EndFunction
 	
@@ -519,6 +546,7 @@ State Teardown
 	EndFunction
 	
 	Function uninstallerIdled()
+	{In a teardown scenario, the uninstaller finishing its job means the engine can cease operation.  This is why all the interested redefinitions of various function are what they are in this state.}
 		if (canRunUninstaller()) ; just in case there is some unknown edge-condition where the uninstaller is already running from having queued items (as opposed to uninstalling everything.)
 			decommissionUninstaller()
 			Stop()

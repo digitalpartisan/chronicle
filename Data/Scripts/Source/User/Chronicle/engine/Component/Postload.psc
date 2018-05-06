@@ -1,5 +1,5 @@
 Scriptname Chronicle:Engine:Component:Postload extends Chronicle:Engine:Component
-{When attaching this script to a quest record, do not check the "Start Game Enabled" box.}
+{This component is perhaps the most simple in that it does no event observation because it only iterates over the installed packages and calls their postload behavior.}
 
 String sStateProcessing = "Processing"
 

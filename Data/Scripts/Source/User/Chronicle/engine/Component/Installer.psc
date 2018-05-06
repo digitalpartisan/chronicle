@@ -1,5 +1,5 @@
 Scriptname Chronicle:Engine:Component:Installer extends Chronicle:Engine:Component
-{When attaching this script to a quest record, do not check the "Start Game Enabled" box.}
+{This component type is responsible for queuing and installing package objects into the engine containing it.}
 
 String sStateCoreInstall = "CoreInstall" Const
 String sStateProcessQueue = "ProcessQueue" Const
@@ -10,6 +10,8 @@ Chronicle:Package Function getTargetPackage()
 EndFunction
 
 Function startupBehavior()
+{the very first thing the installer needs to do is install the core package because its success or failure dictates not only whether or not anything else can happen at all,
+but also the environment into which other packages install.  See the required core version properties on both the Chronicle:Engine and Chronicle:Package:NonCore scripts for details.}
 	GoToState(sStateCoreInstall)
 EndFunction
 
@@ -77,7 +79,7 @@ Function performPackageInstallation(Chronicle:Package packageRef)
 		observePackageInstall()
 		packageRef.Start()
 	else
-		sendFatalError()
+		sendFatalError() ; this seems like a poor reaction until one considers that a package which cannot install should not have made it in to the queue
 	endif
 EndFunction
 

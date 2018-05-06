@@ -1,5 +1,6 @@
 Scriptname Chronicle:Package extends Quest Hidden
-{This is the main package logic.  When attaching this to a Quest record in the editor, do not check the "Start Game Enabled" box.}
+{This is the main package logic.  When attaching this to a Quest record in the editor, do not check the "Start Game Enabled" box because Chronicle has other methods of running packages.
+See the Chronicle:Package:Shepherd script for details.}
 
 CustomEvent InstallComplete
 CustomEvent InstallFailed
@@ -14,7 +15,7 @@ Group Version
 	Chronicle:Version:Stored Property CurrentVersion Auto Const Mandatory
 	{The current version of the package.}
 	Chronicle:Version:Static Property VersionSetting Auto Const Mandatory
-	{The version that this package should attempt to become.}
+	{The version that this package should attempt to become during the next update cycle.}
 EndGroup
 
 Group Messaging
@@ -31,8 +32,13 @@ Group Messaging
 EndGroup
 
 Chronicle:Package:CustomBehavior Property MyCustomizations Auto Const
+{This seems like a bit much since it is possible, in theory, to extend a package script and override existing functions to implement custom behaviors.
+The trouble there is that Chronicle itself, for enforce various architectural requirements, already extends this script and implementing custom behaviors
+by further extension would require duplicating code.
+For this reason, the decision was made to favor composition over inheritance.  If you need customized behavior for your packages, implement an extension of
+the Chronicle:Package:CustomBehavior script, attach it to a quest object, and set this property's value to said object.}
 
-Chronicle:Version:Static nextVersion = None
+Chronicle:Version:Static nextVersion = None ; used to store the next update while this package is updating itself
 
 String sStateDormant = "Dormant" Const
 String sStateSetup = "Setup" Const

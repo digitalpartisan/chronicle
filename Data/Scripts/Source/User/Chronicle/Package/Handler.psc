@@ -1,4 +1,7 @@
 Scriptname Chronicle:Package:Handler extends DynamicTerminal:Basic Conditional
+{Using this script requires the Dynamic Terminal library.  You do not need to use this functionality to make use of most of Chronicle's features.
+This script is used to display information about a package in a terminal as well as provide options such as uninstalling it should that be possible.
+For examples of how to apply this script, reference the Chronicle Testing plugin.}
 
 Message Property InvalidPackageMessage Auto Const Mandatory
 {The message to display in the terminal if an invalid package is specified.}
