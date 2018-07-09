@@ -31,12 +31,13 @@ Group Messaging
 	{Shown to the player when this package is updated, provided it is set.}
 EndGroup
 
-Chronicle:Package:CustomBehavior Property MyCustomizations Auto Const
+Chronicle:Package:CustomBehavior[] Property Customizations Auto Const
 {This seems like a bit much since it is possible, in theory, to extend a package script and override existing functions to implement custom behaviors.
 The trouble there is that Chronicle itself, for enforce various architectural requirements, already extends this script and implementing custom behaviors
 by further extension would require duplicating code.
 For this reason, the decision was made to favor composition over inheritance.  If you need customized behavior for your packages, implement an extension of
 the Chronicle:Package:CustomBehavior script, attach it to a quest object, and set this property's value to said object.}
+Chronicle:Package:CustomData Property CustomData Auto Const
 
 Chronicle:Version:Static nextVersion = None ; used to store the next update while this package is updating itself
 
@@ -66,8 +67,12 @@ Chronicle:Engine Function getEngine()
 	return None
 EndFunction
 
-Chronicle:Package:CustomBehavior Function getCustomizations()
-	return MyCustomizations
+Chronicle:Package:CustomBehavior[] Function getCustomizations()
+	return Customizations
+EndFunction
+
+Chronicle:Package:CustomData Function getCustomData()
+	return CustomData
 EndFunction
 
 Bool Function isInAIO()
@@ -104,39 +109,75 @@ Bool Function isInstalled()
 EndFunction
 
 Bool Function meetsCustomInstallationConditions()
-	Chronicle:Package:CustomBehavior customizations = getCustomizations()
-	if (customizations)
-		return customizations.meetsInstallationConditions()
-	else
+	Chronicle:Package:CustomBehavior[] myCustomizations = getCustomizations()
+	
+	if (!myCustomizations)
 		return true
 	endif
+	
+	Int iCounter = 0
+	while (iCounter < myCustomizations.Length)
+		if (!myCustomizations[iCounter].meetsInstallationConditions())
+			return false
+		endif
+		iCounter += 1
+	endWhile
+	
+	return true
 EndFunction
 
 Bool Function customInstallationBehavior()
-	Chronicle:Package:CustomBehavior customizations = getCustomizations()
-	if (customizations)
-		return customizations.installBehavior()
-	else
+	Chronicle:Package:CustomBehavior[] myCustomizations = getCustomizations()
+	
+	if (!myCustomizations)
 		return true
 	endif
+	
+	Int iCounter = 0
+	while (iCounter < myCustomizations.Length)
+		if (!myCustomizations[iCounter].installBehavior())
+			return false
+		endif
+		iCounter += 1
+	endWhile
+	
+	return true
 EndFunction
 
 Bool Function customPostloadBehavior()
-	Chronicle:Package:CustomBehavior customizations = getCustomizations()
-	if (customizations)
-		return customizations.postloadBehavior()
-	else
+	Chronicle:Package:CustomBehavior[] myCustomizations = getCustomizations()
+	
+	if (!myCustomizations)
 		return true
 	endif
+	
+	Int iCounter = 0
+	while (iCounter < myCustomizations.Length)
+		if (!myCustomizations[iCounter].postloadBehavior())
+			return false
+		endif
+		iCounter += 1
+	endWhile
+	
+	return true
 EndFunction
 
 Bool Function customUninstallationBehavior()
-	Chronicle:Package:CustomBehavior customizations = getCustomizations()
-	if (customizations)
-		return customizations.uninstallBehavior()
-	else
+	Chronicle:Package:CustomBehavior[] myCustomizations = getCustomizations()
+	
+	if (!myCustomizations)
 		return true
 	endif
+	
+	Int iCounter = 0
+	while (iCounter < myCustomizations.Length)
+		if (!myCustomizations[iCounter].uninstallBehavior())
+			return false
+		endif
+		iCounter += 1
+	endWhile
+	
+	return true
 EndFunction
 
 Bool Function canInstallLogic()
