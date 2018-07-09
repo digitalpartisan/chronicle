@@ -5,5 +5,10 @@ This script is not required to use the Chronicle as such.}
 InjectTec:Plugin Property ThirdPartyPlugin Auto Const Mandatory
 
 Bool Function meetsInstallationConditions()
-	return ThirdPartyPlugin.isInstalled()
+	if (ThirdPartyPlugin)
+		Chronicle:Logger:Package:CustomBehavior.logCheckPluginInstalled(self, ThirdPartyPlugin)
+		return ThirdPartyPlugin.isInstalled()
+	endif
+	
+	return false
 EndFunction
