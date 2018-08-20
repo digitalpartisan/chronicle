@@ -1,5 +1,6 @@
 v1.1.0
 Fixed a typo in a token name in the Package pagination terminal
+Tested Chronicle v1.1.0 upgrades
 
 v1.0.0
 Initial release
