@@ -15,38 +15,37 @@ Function handleQuest(QuestData data, Bool bInstall = true)
 	
 	if (bInstall)
 		if (data.StopOnInstall)
-			Chronicle:Logger:Package:CustomBehavior.logStoppingQuest(self, data.Target, bInstall)
 			data.Target.Stop()
 		else
-			Chronicle:Logger:Package:CustomBehavior.logStartingQuest(self, data.Target, bInstall)
 			data.Target.Start()
 		endif
 	else
 		if (data.StopOnUninstall)
-			Chronicle:Logger:Package:CustomBehavior.logStoppingQuest(self, data.Target, bInstall)
 			data.Target.Stop()
 		endif
 	endif
 EndFunction
 
 Function handleQuests(Bool bInstall = true)
+	Chronicle:Logger:Package:CustomBehavior.logQuest(self, bInstall)
+
 	if (!Quests)
 		return
 	endif
 	
 	Int iCounter = 0
 	while (iCounter < Quests.Length)
-		handleQuest(Quests[iCounter])
+		handleQuest(Quests[iCounter], bInstall)
 		iCounter += 1
 	endWhile
 EndFunction
 
 Bool Function installBehavior()
 	handleQuests()
-	return parent.installBehavior()
+	return true
 EndFunction
 
 Bool Function uninstallBehavior()
 	handleQuests(false)
-	return parent.uninstallBehavior()
+	return true
 EndFunction

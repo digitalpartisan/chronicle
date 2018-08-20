@@ -1,4 +1,5 @@
 v1.1.0
+Integrated Loggout v1.1.0
 Implemented common custom behaviors into Chronicle itself
 
 v1.0.0

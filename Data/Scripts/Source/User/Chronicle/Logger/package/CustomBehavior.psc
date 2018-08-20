@@ -35,44 +35,18 @@ Bool Function logDefaultUninstall(Chronicle:Package:CustomBehavior behavior) Glo
 	return warn(behavior + " is executing the default uninstall behavior")
 EndFunction
 
-Bool Function logInjection(Chronicle:Package:CustomBehavior:Injections behavior, Quest injection) Global
-	return log(behavior + " is injecting " + injection)
+Bool Function logInjection(Chronicle:Package:CustomBehavior:Injections behavior, Bool bInjecting = true) Global
+	return log(Loggout.buildMessage(behavior + " is ", bInjecting, "injecting", "reverting"))
 EndFunction
 
-Bool Function logRevertion(Chronicle:Package:CustomBehavior:Injections behavior, Quest injection) Global
-	return log(behavior + " is reverting " + injection)
+Bool Function logPerks(Chronicle:Package:CustomBehavior:Perks behavior, Bool bAdding = true) Global
+	return log(Loggout.buildMessage(behavior + " is ", bAdding, "adding", "removing"))
 EndFunction
 
-Bool Function logAddPerk(Chronicle:Package:CustomBehavior:Perks behavior, Perk pPerk) Global
-	return log(behavior + " adding perk " + pPerk)
+Bool Function logCheckPluginInstalled(Chronicle:Package:CustomBehavior:ThirdPartyPlugin behavior, Bool bResult = true) Global
+	return log(Loggout.buildMessage(behavior as String, bResult, " found plugins", " could not find plugins"))
 EndFunction
 
-Bool Function logRemovePerk(Chronicle:Package:CustomBehavior:Perks behavior, Perk pPerk) Global
-	return log(behavior + " removing perk " + pPerk)
-EndFunction
-
-Bool Function logCheckPluginInstalled(Chronicle:Package:CustomBehavior:ThirdPartyPlugin behavior, InjectTec:Plugin plugin) Global
-	return log(behavior + " is checking for plugin " + plugin)
-EndFunction
-
-Bool Function logStartingQuest(Chronicle:Package:CustomBehavior:QuestHandler behavior, Quest target, Bool bInstall) Global
-	String sMessage = behavior + " is starting quest " + target + " on package "
-	if (bInstall)
-		sMessage += " installation"
-	else
-		sMessage += " uninstallation"
-	endif
-	
-	return log(sMessage)
-EndFunction
-
-Bool Function logStoppingQuest(Chronicle:Package:CustomBehavior:QuestHandler behavior, Quest target, Bool bInstall) Global
-	String sMessage = behavior + " is stopping quest " + target + " on package "
-	if (bInstall)
-		sMessage += "installation"
-	else
-		sMessage += "uninstallation"
-	endif
-	
-	return log(sMessage)
+Bool Function logQuest(Chronicle:Package:CustomBehavior:QuestHandler behavior, Bool bInstalling = true) Global
+	return log(Loggout.buildMessage(behavior + " is ", bInstalling, "setting up", "shutting down"))
 EndFunction

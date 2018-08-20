@@ -9,20 +9,16 @@ Function handleInjection(Quest InjectionRecord, Bool bInject = true)
 	
 	if (injector)
 		if (bInject)
-			Chronicle:Logger:Package:CustomBehavior.logInjection(self, injector)
 			injector.inject()
 		else
-			Chronicle:Logger:Package:CustomBehavior.logRevertion(self, injector)
 			injector.revert()
 		endif
 	endif
 	
 	if (bulkInjector)
 		if (bInject)
-			Chronicle:Logger:Package:CustomBehavior.logInjection(self, injector)
 			bulkInjector.inject()
 		else
-			Chronicle:Logger:Package:CustomBehavior.logRevertion(self, injector)
 			bulkInjector.revert()
 		endif
 	endif
@@ -52,20 +48,24 @@ Function handleBulkInjections(Bool bInject = true)
 	handleInjectionRecords(BulkInjections as Quest[], bInject)
 EndFunction
 
+Function handle(Bool bInject = true)
+	Chronicle:Logger:Package:CustomBehavior.logInjection(self, bInject)
+	
+	handleInjections(bInject)
+	handleBulkInjections(bInject)
+EndFunction
+
 Bool Function installBehavior()
-	handleInjections()
-	handleBulkInjections()
-	return parent.installBehavior()
+	handle()
+	return true
 EndFunction
 
 Bool Function postloadBehavior()
-	handleInjections()
-	handleBulkInjections()
-	return parent.postloadBehavior()
+	handle()
+	return true
 EndFunction
 
 Bool Function uninstallBehavior()
-	handleInjections(false)
-	handleBulkInjections(false)
-	return parent.uninstallBehavior()
+	handle(false)
+	return true
 EndFunction
