@@ -3,6 +3,8 @@ Scriptname Chronicle:Package:CustomBehavior:Perks extends Chronicle:Package:Cust
 Perk[] Property Perks Auto Const Mandatory
 
 Function handlePerks(Bool bAdd = true)
+	Chronicle:Logger:Package:CustomBehavior.logPerks(self, bAdd)
+	
 	if (!Perks)
 		return
 	endif
@@ -10,19 +12,15 @@ Function handlePerks(Bool bAdd = true)
 	Int iCounter = 0
 	Actor aPlayer = Game.GetPlayer()
 	Perk pPerk = None
+	Bool bHas = false
 	while (iCounter < Perks.Length)
 		pPerk = Perks[iCounter]
+		bHas = aPlayer.HasPerk(pPerk)
 		
-		if (bAdd)
-			if (!aPlayer.HasPerk(pPerk))
-				Chronicle:Logger:Package:CustomBehavior.logAddPerk(self, pPerk)
-				aPlayer.AddPerk(pPerk)
-			endif
-		else
-			if (aPlayer.HasPerk(pPerk))
-				Chronicle:Logger:Package:CustomBehavior.logRemovePerk(self, pPerk)
-				aPlayer.RemovePerk(pPerk)
-			endif
+		if (bAdd && !bHas)
+			aPlayer.AddPerk(pPerk)
+		elseif (!bAdd && bHas)
+			aPlayer.RemovePerk(pPerk)
 		endif
 		
 		iCounter += 1
