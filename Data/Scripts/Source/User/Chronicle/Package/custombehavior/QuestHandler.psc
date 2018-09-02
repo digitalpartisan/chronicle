@@ -2,7 +2,9 @@ Scriptname Chronicle:Package:CustomBehavior:QuestHandler extends Chronicle:Packa
 
 Struct QuestData 
 	Quest Target
+	Bool StartOnInstall = true
 	Bool StopOnInstall = false
+	Bool StartOnUninstall = false
 	Bool StopOnUninstall = true
 EndStruct
 
@@ -13,16 +15,23 @@ Function handleQuest(QuestData data, Bool bInstall = true)
 		return
 	endif
 	
+	Bool bStart = false
+	Bool bStop = false
+	
 	if (bInstall)
-		if (data.StopOnInstall)
-			data.Target.Stop()
-		else
-			data.Target.Start()
-		endif
+		bStart = data.StartOnInstall
+		bStop = data.StopOnInstall
 	else
-		if (data.StopOnUninstall)
-			data.Target.Stop()
-		endif
+		bStart = data.StartOnUninstall
+		bStop = data.StopOnUninstall
+	endif
+	
+	if (bStart)
+		data.Target.Start()
+	endif
+	
+	if (bStop)
+		data.Target.Stop()
 	endif
 EndFunction
 
