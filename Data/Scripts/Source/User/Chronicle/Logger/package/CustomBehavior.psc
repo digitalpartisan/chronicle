@@ -35,8 +35,11 @@ Bool Function logDefaultUninstall(Chronicle:Package:CustomBehavior behavior) Glo
 	return warn(behavior + " is executing the default uninstall behavior")
 EndFunction
 
-Bool Function logInjection(Chronicle:Package:CustomBehavior:Injections behavior, Bool bInjecting = true) Global
-	return log(Loggout.buildMessage(behavior + " is ", bInjecting, "injecting", "reverting"))
+Bool Function logInjection(Chronicle:Package:CustomBehavior:Injections behavior, Bool bInjecting = true, Bool bForcing = false) Global
+	String sMessage = behavior + " is "
+	sMessage += Loggout.buildMessage("", bInjecting, "injecting", "reverting")
+	sMessage += Loggout.buildMessage(" ", bForcing, "with force", "without force")
+	return log(sMessage)
 EndFunction
 
 Bool Function logPerks(Chronicle:Package:CustomBehavior:Perks behavior, Bool bAdding = true) Global
