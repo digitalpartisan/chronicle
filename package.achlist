@@ -1,4 +1,5 @@
 [
+	"Data\\Scripts\\Loggout.pex",
 	"Data\\Scripts\\Chronicle\\engine\\Component\\Installer.pex",
 	"Data\\Scripts\\Chronicle\\engine\\Component\\Postload.pex",
 	"Data\\Scripts\\Chronicle\\engine\\Component\\Uninstaller.pex",
