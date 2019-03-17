@@ -1,5 +1,8 @@
 [
+	"Data\\Scripts\\HolotapeRetainer.pex",
 	"Data\\Scripts\\Loggout.pex",
+	"Data\\Scripts\\SettlementLocationPicker.pex",
+	"Data\\Scripts\\Vault111ExitDetector.pex",
 	"Data\\Scripts\\Chronicle\\engine\\Component\\Installer.pex",
 	"Data\\Scripts\\Chronicle\\engine\\Component\\Postload.pex",
 	"Data\\Scripts\\Chronicle\\engine\\Component\\Uninstaller.pex",
