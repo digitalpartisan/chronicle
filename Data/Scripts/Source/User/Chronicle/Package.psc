@@ -481,3 +481,23 @@ State FatalError
 		Stop()
 	EndEvent
 EndState
+
+Chronicle:Package:CustomBehavior[] Function getCustomizationsOfType(String sClassName)
+	if (!Customizations.Length)
+		return None
+	endif
+	
+	Chronicle:Package:CustomBehavior[] foundCustomizations = new Chronicle:Package:CustomBehavior[0]
+	Int iCounter = 0
+	Chronicle:Package:CustomBehavior customization = None
+	while (iCounter < Customizations.Length)
+		customization = Customizations[iCounter]
+		if (customization && customization.CastAs(sClassName))
+			foundCustomizations.Add(customization)
+		endif
+		
+		iCounter += 1
+	endWhile
+	
+	return foundCustomizations
+EndFunction

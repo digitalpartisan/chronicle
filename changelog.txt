@@ -1,6 +1,10 @@
+v1.2.0
+Switched to Jiffy to cut down on library dependencies
+Expanded pre-made pacakge customization behaviors to include all scripts provided by Jiffy
+
 v1.1.0
 Integrated Loggout v1.1.0
-Implemented common custom behaviors into Chronicle itself
+Implemented common customization behaviors into Chronicle itself
 
 v1.0.0
 Initial release

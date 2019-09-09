@@ -4,17 +4,16 @@ which cannot be easily set in the editor.  This means that the engine is not in 
 which said plugin could depend on.
 In order to use this script successfully, you will need to understand how to set its properties.  See the Inject-Tec library for details.}
 
+Import InjectTec:Utility:HexidecimalLogic
+
 Group RemoteEngineSettings
 	InjectTec:Plugin Property MyPlugin Auto Const Mandatory
-	Int Property EngineID Auto Const Mandatory
+	Int Property EngineID Auto Const
+	DigitSet Property EngineDigits Auto Const Mandatory
 EndGroup
 
 Chronicle:Engine function loadEngine()
-	if (!MyPlugin)
-		return None
-	endif
-	
-	return MyPlugin.lookupForm(EngineID) as Chronicle:Engine
+	return InjectTec:Plugin.fetchFromDigits(MyPlugin, EngineDigits) as Chronicle:Engine
 EndFunction
 
 Chronicle:Engine Function getEngineObject()

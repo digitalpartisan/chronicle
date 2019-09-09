@@ -37,19 +37,19 @@ EndFunction
 
 Bool Function logInjection(Chronicle:Package:CustomBehavior:Injections behavior, Bool bInjecting = true, Bool bForcing = false) Global
 	String sMessage = behavior + " is "
-	sMessage += Loggout.buildMessage("", bInjecting, "injecting", "reverting")
-	sMessage += Loggout.buildMessage(" ", bForcing, "with force", "without force")
+	sMessage += Jiffy:Loggout.buildMessage("", bInjecting, "injecting", "reverting")
+	sMessage += Jiffy:Loggout.buildMessage(" ", bForcing, "with force", "without force")
 	return log(sMessage)
 EndFunction
 
 Bool Function logPerks(Chronicle:Package:CustomBehavior:Perks behavior, Bool bAdding = true) Global
-	return log(Loggout.buildMessage(behavior + " is ", bAdding, "adding", "removing"))
+	return log(Jiffy:Loggout.buildMessage(behavior + " is ", bAdding, "adding", "removing"))
 EndFunction
 
 Bool Function logCheckPluginInstalled(Chronicle:Package:CustomBehavior:ThirdPartyPlugin behavior, Bool bResult = true) Global
-	return log(Loggout.buildMessage(behavior as String, bResult, " found plugins", " could not find plugins"))
+	return log(Jiffy:Loggout.buildMessage(behavior as String, bResult, " found plugins", " could not find plugins"))
 EndFunction
 
 Bool Function logQuest(Chronicle:Package:CustomBehavior:QuestHandler behavior, Bool bInstalling = true) Global
-	return log(Loggout.buildMessage(behavior + " is ", bInstalling, "setting up", "shutting down"))
+	return log(Jiffy:Loggout.buildMessage(behavior + " is ", bInstalling, "setting up", "shutting down"))
 EndFunction

@@ -1,79 +1,54 @@
 Scriptname Chronicle:Package:CustomBehavior:Injections extends Chronicle:Package:CustomBehavior
 
 InjectTec:Injector[] Property Injections Auto Const
+FormList Property InjectionList Auto Const
 InjectTec:Injector:Bulk[] Property BulkInjections Auto Const
+FormList Property BulkInjectionList Auto Const
 
-Function handleInjection(Quest InjectionRecord, Bool bInject = true, Bool bForce = false)
-	InjectTec:Injector injector = InjectionRecord as InjectTec:Injector
-	InjectTec:Injector:Bulk bulkInjector = InjectionRecord as InjectTec:Injector:Bulk
-	
-	if (injector)
-		if (bInject)
-			injector.inject(bForce)
-		else
-			injector.revert(bForce)
-		endif
-	endif
-	
-	if (bulkInjector)
-		if (bInject)
-			bulkInjector.inject(bForce)
-		else
-			bulkInjector.revert(bForce)
-		endif
-	endif
-EndFunction
-
-Function handleInjectionRecords(Quest[] InjectionRecords, Bool bInject = true, Bool bForce = false)
-	Int iCounter = 0
-	while (iCounter < InjectionRecords.Length)
-		handleInjection(InjectionRecords[iCounter], bInject, bForce)
-		iCounter += 1
-	endWhile
-EndFunction
-
-Function handleInjections(Bool bInject = true, Bool bForce = false)
-	if (!Injections)
-		return
-	endif
-
-	handleInjectionRecords(Injections as Quest[], bInject, bForce)
-EndFunction
-
-Function handleBulkInjections(Bool bInject = true, Bool bForce = false)
-	if (!BulkInjections)
-		return
-	endif
-	
-	handleInjectionRecords(BulkInjections as Quest[], bInject, bForce)
-EndFunction
-
-Function handle(Bool bInject = true, Bool bForce = false)
-	Chronicle:Logger:Package:CustomBehavior.logInjection(self, bInject, bForce)
-	
-	handleInjections(bInject, bForce)
-	handleBulkInjections(bInject, bForce)
+Function inject(Bool bForce = false)
+	InjectTec:Injector.bulkInject(Injections, bForce)
+	InjectTec:Injector.bulkInjectList(InjectionList, bForce)
+	InjectTec:Injector:Bulk.bulkInject(BulkInjections, bForce)
+	InjectTec:Injector:Bulk.bulkInjectList(BulkInjectionList, bForce)
 EndFunction
 
 Function forceInject()
-	handle(true, true)
+	inject(true)
+EndFunction
+
+Function revert(Bool bForce = false)
+	InjectTec:Injector.bulkRevert(Injections, bForce)
+	InjectTec:Injector.bulkRevertList(InjectionList, bForce)
+	InjectTec:Injector:Bulk.bulkRevert(BulkInjections, bForce)
+	InjectTec:Injector:Bulk.bulkRevertList(BulkInjectionList, bForce)
 EndFunction
 
 Function forceRevert()
-	handle(false, true)
+	revert(true)
+EndFunction
+
+Function verify(Bool bForceInjectOnFailure = false)
+	InjectTec:Injector.bulkVerify(Injections, bForceInjectOnFailure)
+	InjectTec:Injector.bulkVerifyList(InjectionList, bForceInjectOnFailure)
+	InjectTec:Injector:Bulk.bulkVerify(BulkInjections, bForceInjectOnFailure)
+	InjectTec:Injector:Bulk.bulkVerifyList(BulkInjectionList, bForceInjectOnFailure)
+EndFunction
+
+Function forceVerify()
+	verify(true)
 EndFunction
 
 Bool Function installBehavior()
-	handle()
+	inject()
 	return true
 EndFunction
 
 Bool Function postloadBehavior()
-	handle()
+	inject()
 	return true
 EndFunction
 
 Bool Function uninstallBehavior()
-	handle(false)
+	revert()
 	return true
 EndFunction
