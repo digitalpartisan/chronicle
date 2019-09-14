@@ -2,7 +2,11 @@ Scriptname Chronicle:Engine:Handler:Static extends Chronicle:Engine:Handler Cond
 
 Chronicle:Engine Property MyEngine Auto Const Mandatory
 
+Chronicle:Engine Function getEngine()
+	return MyEngine
+EndFunction
+
 Function refreshStatus()
-	setEngine(MyEngine)
+	setEngine(getEngine())
 	parent.refreshStatus()
 EndFunction
