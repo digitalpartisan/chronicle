@@ -8,12 +8,15 @@ Import InjectTec:Utility:HexidecimalLogic
 
 Group RemoteEngineSettings
 	InjectTec:Plugin Property MyPlugin Auto Const Mandatory
-	Int Property EngineID Auto Const
 	DigitSet Property EngineDigits Auto Const Mandatory
 EndGroup
 
 Chronicle:Engine function loadEngine()
-	return InjectTec:Plugin.fetchFromDigits(MyPlugin, EngineDigits) as Chronicle:Engine
+	if (!MyPlugin)
+		return None
+	endif
+	
+	return MyPlugin.lookupWithDigits(EngineDigits) as Chronicle:Engine
 EndFunction
 
 Chronicle:Engine Function getEngineObject()
