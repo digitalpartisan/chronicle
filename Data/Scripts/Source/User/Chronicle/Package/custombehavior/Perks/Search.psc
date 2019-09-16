@@ -1,7 +1,7 @@
 Scriptname Chronicle:Package:custombehavior:Perks:Search extends Chronicle:Package:CustomBehavior:BehaviorSearch
 
 Bool Function meetsCriteria(Chronicle:Package:CustomBehavior behavior)
-	return behavior is Chronicle:Package:CustomBehavior:Perks
+	return (behavior as Chronicle:Package:CustomBehavior:Perks)
 EndFunction
 
 Chronicle:Package:CustomBehavior:Perks[] Function searchPerks(Chronicle:Package targetPackage)
