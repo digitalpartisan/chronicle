@@ -29,6 +29,7 @@ EndFunction
 Function updateLogic()
 {Override this in a child script to implement your update logic appropriate for the version to which this is associated.}
 	Chronicle:Logger.logBehaviorUndefined(self, "updateLogic()")
+	sendFailure()
 EndFunction
 
 Event OnQuestInit()
