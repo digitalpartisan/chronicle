@@ -165,7 +165,7 @@ EndFunction
 Bool Function customUninstallationBehavior()
 	Chronicle:Package:CustomBehavior[] myCustomizations = getCustomizations()
 	
-	if (!myCustomizations)
+	if (!myCustomizations || !myCustomizations.Length)
 		return true
 	endif
 	

@@ -72,6 +72,7 @@ EndFunction
 
 Bool Function postloadBehavior()
 	attemptStart(getStartOnPostload())
+	return true
 EndFunction
 
 Bool Function uninstallBehavior()

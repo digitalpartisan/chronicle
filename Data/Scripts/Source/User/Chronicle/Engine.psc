@@ -317,14 +317,10 @@ with Chronicle and a game load event might need to run on a quest object which h
 	; only show the generic messages once per load
 	bShownTooOldMessage = false
 	bShownTooNewMessage = false
-	
-	if (isIdle()) ; if no component is running when the game loads, run the updater immediately.  Otherwise, flag it as needing to run so that it runs the first chance it gets
-		getUpdater().process()
-	else
-		getUpdater().setNeedsProcessing()
-	endif
-	
-	getPostload().setNeedsProcessing() ; the postloader always needs to run in this case, so make sure it gets taken care of when possible
+
+	getUpdater().setNeedsProcessing()
+	getPostload().setNeedsProcessing()
+    idleEventLogicLoop()
 EndFunction
 
 Bool Function queueForInstallLogic(Chronicle:Package packageRef)
@@ -348,7 +344,7 @@ EndFunction
 Bool Function isIdle()
 {Certain things (such as shutting down the entire engine) can only happen when nothing else is going on for thread safety reasons.
 For details, search for calls to this function.}
-	return getInstaller().isIdle() && getUpdater().isIdle() && getUninstaller().isIdle()
+	return getInstaller().isIdle() && getUpdater().isIdle() && getPostload().isIdle() && getUninstaller().isIdle()
 EndFunction
 
 Event Chronicle:Engine:Component.Idled(Chronicle:Engine:Component componentRef, Var[] args)

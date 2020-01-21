@@ -6,7 +6,6 @@ Chronicle:Engine Function getEngine()
 	return MyEngine
 EndFunction
 
-Function refreshStatus()
-	setEngine(getEngine())
-	parent.refreshStatus()
+Function setEngine(Chronicle:Engine newEngine)
+	; do nothing - the engine is already setEngine
 EndFunction
