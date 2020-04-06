@@ -6,6 +6,8 @@ Struct QuestData
 	Bool StopOnInstall = false
 	Bool StartOnUninstall = false
 	Bool StopOnUninstall = true
+	Bool CompleteOnUninstall = false
+	Bool FailOnUninstall = false
 EndStruct
 
 QuestData[] Property Quests Auto Const Mandatory
@@ -17,6 +19,8 @@ Function handleQuest(QuestData data, Bool bInstall = true)
 	
 	Bool bStart = false
 	Bool bStop = false
+	Bool bComplete = false
+	Bool bFail = false
 	
 	if (bInstall)
 		bStart = data.StartOnInstall
@@ -24,6 +28,17 @@ Function handleQuest(QuestData data, Bool bInstall = true)
 	else
 		bStart = data.StartOnUninstall
 		bStop = data.StopOnUninstall
+		bComplete = data.CompleteOnUninstall
+		bFail = data.FailOnUninstall
+	endif
+	
+	if (bFail)
+		data.Target.FailAllObjectives()
+	endif
+	
+	if (bComplete)
+		data.Target.CompleteAllObjectives()
+		data.Target.CompleteQuest()
 	endif
 	
 	if (bStart)
@@ -38,7 +53,7 @@ EndFunction
 Function handleQuests(Bool bInstall = true)
 	Chronicle:Logger:Package:CustomBehavior.logQuest(self, bInstall)
 
-	if (!Quests)
+	if (!Quests || !Quests.Length)
 		return
 	endif
 	

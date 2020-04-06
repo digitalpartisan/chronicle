@@ -169,12 +169,12 @@ Bool Function customUninstallationBehavior()
 		return true
 	endif
 	
-	Int iCounter = 0
-	while (iCounter < myCustomizations.Length)
+	Int iCounter = myCustomizations.Length - 1
+	while (iCounter >= 0)
 		if (!myCustomizations[iCounter].uninstallBehavior())
 			return false
 		endif
-		iCounter += 1
+		iCounter -= 1
 	endWhile
 	
 	return true
