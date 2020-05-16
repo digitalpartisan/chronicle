@@ -18,21 +18,30 @@ Function goToDeleted()
 	GoToState(sStateDeleted)
 EndFunction
 
+Chronicle:Package Function getPackage()
+	return MyPackage
+EndFunction
+
+Bool Function comparePackage(Chronicle:Package targetPackage)
+	return targetPackage && getPackage() == targetPackage
+EndFunction
+
 Function observePackage(Bool bObserve = true)
+	Chronicle:Package targetPackage = getPackage()
 	if (bObserve)
-		RegisterForCustomEvent(MyPackage, "InstallComplete")
-		RegisterForCustomEvent(MyPackage, "InstallFailed")
-		RegisterForCustomEvent(MyPackage, "UpdateComplete")
-		RegisterForCustomEvent(MyPackage, "UpdateFailed")
-		RegisterForCustomEvent(MyPackage, "UninstallComplete")
-		RegisterForCustomEvent(MyPackage, "UninstallFailed")
+		RegisterForCustomEvent(targetPackage, "InstallComplete")
+		RegisterForCustomEvent(targetPackage, "InstallFailed")
+		RegisterForCustomEvent(targetPackage, "UpdateComplete")
+		RegisterForCustomEvent(targetPackage, "UpdateFailed")
+		RegisterForCustomEvent(targetPackage, "UninstallComplete")
+		RegisterForCustomEvent(targetPackage, "UninstallFailed")
 	else
-		UnregisterForCustomEvent(MyPackage, "InstallComplete")
-		UnregisterForCustomEvent(MyPackage, "InstallFailed")
-		UnregisterForCustomEvent(MyPackage, "UpdateComplete")
-		UnregisterForCustomEvent(MyPackage, "UpdateFailed")
-		UnregisterForCustomEvent(MyPackage, "UninstallComplete")
-		UnregisterForCustomEvent(MyPackage, "UninstallFailed")
+		UnregisterForCustomEvent(targetPackage, "InstallComplete")
+		UnregisterForCustomEvent(targetPackage, "InstallFailed")
+		UnregisterForCustomEvent(targetPackage, "UpdateComplete")
+		UnregisterForCustomEvent(targetPackage, "UpdateFailed")
+		UnregisterForCustomEvent(targetPackage, "UninstallComplete")
+		UnregisterForCustomEvent(targetPackage, "UninstallFailed")
 	endif
 EndFunction
 
@@ -41,9 +50,7 @@ Function installCompleteBehavior(Var[] args)
 EndFunction
 
 Event Chronicle:Package.InstallComplete(Chronicle:Package packageRef, Var[] args)
-	if (MyPackage == packageRef)
-		installCompleteBehavior(args)
-	endif
+	comparePackage(packageRef) && installCompleteBehavior(args)
 EndEvent
 
 Function installFailedBehavior(Var[] args)
@@ -51,9 +58,7 @@ Function installFailedBehavior(Var[] args)
 EndFunction
 
 Event Chronicle:Package.InstallFailed(Chronicle:Package packageRef, Var[] args)
-	if (MyPackage == packageRef)
-		installFailedBehavior(args)
-	endif
+	comparePackage(packageRef) && installFailedBehavior(args)
 EndEvent
 
 Function updateCompleteBehavior(Var[] args)
@@ -61,9 +66,7 @@ Function updateCompleteBehavior(Var[] args)
 EndFunction
 
 Event Chronicle:Package.UpdateComplete(Chronicle:Package packageRef, Var[] args)
-	if (MyPackage == packageRef)
-		updateCompleteBehavior(args)
-	endif
+	comparePackage(packageRef) && updateCompleteBehavior(args)
 EndEvent
 
 Function updateFailedBehavior(Var[] args)
@@ -71,9 +74,7 @@ Function updateFailedBehavior(Var[] args)
 EndFunction
 
 Event Chronicle:Package.UpdateFailed(Chronicle:Package packageRef, Var[] args)
-	if (MyPackage == packageRef)
-		updateFailedBehavior(args)
-	endif
+	comparePackage(packageRef) && updateFailedBehavior(args)
 EndEvent
 
 Function uninstallCompleteBehavior(Var[] args)
@@ -81,9 +82,7 @@ Function uninstallCompleteBehavior(Var[] args)
 EndFunction
 
 Event Chronicle:Package.UninstallComplete(Chronicle:Package packageRef, Var[] args)
-	if (MyPackage == packageRef)
-		uninstallCompleteBehavior(args)
-	endif
+	comparePackage(packageRef) && uninstallCompleteBehavior(args)
 EndEvent
 
 Function uninstallFailedBehavior(Var[] args)
@@ -103,17 +102,28 @@ Function deletionBehavior()
 EndFunction
 
 Function determineState()
-	if (MyPackage.IsStarting() || MyPackage.IsRunning())
+	Chronicle:Package targetPackage = getPackage()
+	if (targetPackage && (targetPackage.IsStarting() || targetPackage.IsRunning()))
 		goToReady()
 	else
 		goToBlocked()
 	endif
 EndFunction
 
+Event OnInit()
+	observePackage()
+	determineState()
+EndEvent
+
 Event OnLoad()
 	observePackage()
 	determineState()
 EndEvent
+
+Function Enable(Bool abFadeIn = false)
+	parent.Enable(abFadeIn)
+	determineState()
+EndFunction
 
 Event OnWorkshopObjectDestroyed(ObjectReference akReference)
 	GoToState(sStateDeleted)
@@ -136,7 +146,7 @@ EndState
 
 State Ready
 	Event OnBeginState(String asOldState)
-		BlockActivation(false)
+		BlockActivation(false, false)
 		Enable() ; useful for non-workshop placed objects that start disabled so that they're not visible unless their package is running
 	EndEvent
 	
