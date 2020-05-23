@@ -33,10 +33,10 @@ Function updateLogic()
 EndFunction
 
 Event OnQuestInit()
-	Chronicle:Logger:Update.starting(self)
+	Chronicle:Package:Update:Logger.starting(self)
 	updateLogic()
 EndEvent
 
 Event OnQuestShutdown()
-	Chronicle:Logger:Update.stopping(self)
+	Chronicle:Package:Update:Logger.stopping(self)
 EndEvent

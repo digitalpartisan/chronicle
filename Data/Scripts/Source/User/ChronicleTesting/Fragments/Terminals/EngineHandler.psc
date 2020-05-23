@@ -29,7 +29,7 @@ EndFunction
 
 Chronicle:Engine:Handler Property EngineHandler Auto Const
 
-DynamicTerminal:PaginationProxy Property PaginationProxy Auto Const
+DynamicTerminal:Paginator:Proxy Property PaginationProxy Auto Const
 
 Chronicle:Package:Paginator Property PackagePaginator Auto Const
 

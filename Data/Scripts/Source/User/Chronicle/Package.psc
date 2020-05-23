@@ -97,7 +97,7 @@ EndFunction
 
 Bool Function hasValidVersionSetting()
 	if (!getVersionSetting().validate())
-		Chronicle:Logger:Package.logInvalidVersion(self)
+		Chronicle:Package:Logger.logInvalidVersion(self)
 		return false
 	endif
 	
@@ -236,7 +236,7 @@ Function observeNextUpdate()
 	RegisterForCustomEvent(targetUpdate, "Success")
 	RegisterForCustomEvent(targetUpdate, "Failure")
 	
-	Chronicle:Logger:Package.logObservingUpdate(self, targetUpdate)
+	Chronicle:Package:Logger.logObservingUpdate(self, targetUpdate)
 EndFunction
 
 Function stopObservingNextUpdate()
@@ -245,7 +245,7 @@ Function stopObservingNextUpdate()
 	UnregisterForCustomEvent(targetUpdate, "Success")
 	UnregisterForCustomEvent(targetUpdate, "Failure")
 	
-	Chronicle:Logger:Package.logStopObservingUpdate(self, targetUpdate)
+	Chronicle:Package:Logger.logStopObservingUpdate(self, targetUpdate)
 EndFunction
 
 Bool Function identifyNextVersion()
@@ -280,7 +280,7 @@ Event Chronicle:Package:Update.Success(Chronicle:Package:Update updateRef, Var[]
 		
 		attemptNextUpdate()
 	else
-		Chronicle:Logger:Package.logPhantomResponse(self, nextUpdate, updateRef)
+		Chronicle:Package:Logger.logPhantomResponse(self, nextUpdate, updateRef)
 		sendUpdateFailed()
 	endif
 EndEvent
@@ -290,7 +290,7 @@ Event Chronicle:Package:Update.Failure(Chronicle:Package:Update updateRef, Var[]
 	
 	Chronicle:Package:Update nextUpdate = nextVersion.getUpdate()
 	if (updateRef != nextUpdate)
-		Chronicle:Logger:Package.logPhantomResponse(self, nextUpdate, updateRef)
+		Chronicle:Package:Logger.logPhantomResponse(self, nextUpdate, updateRef)
 	endif
 	
 	sendUpdateFailed()
@@ -329,7 +329,7 @@ Auto State Dormant
 		if (getEngine().installPackage(self))
 			return true
 		else
-			Chronicle:Logger:Package.logCannotInstall(self)
+			Chronicle:Package:Logger.logCannotInstall(self)
 			return false
 		endif
 	EndFunction
@@ -344,19 +344,19 @@ State Setup
 		Chronicle:Logger.logStateChange(self, asOldState)
 		
 		if (!canInstall())
-			Chronicle:Logger:Package.logSetupStateUnableToInstall(self)
+			Chronicle:Package:Logger.logSetupStateUnableToInstall(self)
 			sendInstallFailed()
 			return
 		endif
 		
 		if (!customInstallationBehavior())
-			Chronicle:Logger:Package.logCustomInstallBehaviorFailed(self)
+			Chronicle:Package:Logger.logCustomInstallBehaviorFailed(self)
 			sendInstallFailed()
 			return
 		endif
 		
 		if (!getCurrentVersion().setTo(getVersionSetting()))
-			Chronicle:Logger:Package.logCouldNotInitializeCurrentVersion(self)
+			Chronicle:Package:Logger.logCouldNotInitializeCurrentVersion(self)
 			sendInstallFailed()
 			return
 		endif
@@ -395,7 +395,7 @@ State Idle
 		if (getEngine().uninstallPackage(self))
 			return true
 		else
-			Chronicle:Logger:Package.logCannotUninstall(self)
+			Chronicle:Package:Logger.logCannotUninstall(self)
 			return false
 		endif
 	EndFunction
@@ -419,12 +419,12 @@ State Updating
 		Chronicle:Version:Static lowestVersion = getLowestVersion(current)
 		
 		if (!lowestVersion || lowestVersion.lessThan(current))
-			Chronicle:Logger:Package.versionConfigurationError(self)
+			Chronicle:Package:Logger.versionConfigurationError(self)
 			return false
 		endif
 		
 		nextVersion = lowestVersion.getNextVersion() ; because we don't need to run the update that puts this package at the current version, but we do need to run the next one
-		Chronicle:Logger:Package.identifiedNextVersion(self, nextVersion)
+		Chronicle:Package:Logger.identifiedNextVersion(self, nextVersion)
 		
 		return true
 	EndFunction
@@ -444,7 +444,7 @@ State Updating
 		endif
 		
 		if (!nextVersion.getUpdate())
-			Chronicle:Logger:Version.logNoUpdate(nextVersion)
+			Chronicle:Version:Logger.logNoUpdate(nextVersion)
 			sendUpdateFailed()
 		endif
 		

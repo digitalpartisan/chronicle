@@ -51,7 +51,7 @@ Function handleQuest(QuestData data, Bool bInstall = true)
 EndFunction
 
 Function handleQuests(Bool bInstall = true)
-	Chronicle:Logger:Package:CustomBehavior.logQuest(self, bInstall)
+	Chronicle:Package:CustomBehavior:Logger.logQuest(self, bInstall)
 
 	if (!Quests || !Quests.Length)
 		return

@@ -29,7 +29,7 @@ Chronicle:Package Function getPackage()
 EndFunction
 
 Function setPackage(Chronicle:Package newPackageRef)
-	Chronicle:Logger:Package.handlerReceivedPackage(self, newPackageRef)
+	Chronicle:Package:Logger.handlerReceivedPackage(self, newPackageRef)
 	PackageRef = newPackageRef
 	refreshStatus()
 EndFunction
@@ -49,7 +49,7 @@ Function refreshStatus()
 	bCanInstall = myPackage.getEngine().getInstaller().canActOnPackage(myPackage)
 	bCanUninstall = myPackage.getEngine().getUninstaller().canActOnPackage(myPackage)
 	
-	Chronicle:Logger:Package.handlerStatus(self)
+	Chronicle:Package:Logger.handlerStatus(self)
 EndFunction
 
 Function install()

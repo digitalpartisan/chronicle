@@ -39,7 +39,7 @@ Bool Function validate()
 {Returns true if the value settings are something other than 0.0.0 and false otherwise.}
 	Bool bResult = getMajor() > 0 || getMinor() > 0 || getBugfix() > 0 ; allows for versions that could be 0.0.*, 0.*.0, and *.0.0 - bascially, something needs to not be zero
 	if (!bResult)
-		Chronicle:Logger:Version.logInvalid(self)
+		Chronicle:Version:Logger.logInvalid(self)
 	endif
 	
 	return bResult
@@ -93,7 +93,7 @@ Returns values are identical to compareInt() except the logic true for the entir
 	endif
 	iResult = compareBugfix(otherVersion.getBugfix())
 	
-	Chronicle:Logger:Version.logComparison(self, otherVersion, iResult)
+	Chronicle:Version:Logger.logComparison(self, otherVersion, iResult)
 	
 	return iResult
 EndFunction

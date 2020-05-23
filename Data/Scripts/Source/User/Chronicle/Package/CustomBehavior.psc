@@ -3,21 +3,21 @@ Scriptname Chronicle:Package:CustomBehavior extends Chronicle:Package:Customizat
 Aside from the issue of composition over inheritance, it's best not to override things like engine / component / package scripts unless you have a very good reason for doing so.}
 
 Bool Function meetsInstallationConditions()
-	Chronicle:Logger:Package:CustomBehavior.logDefaultInstallationConditions(self)
+	Chronicle:Package:CustomBehavior:Logger.logDefaultInstallationConditions(self)
 	return true
 EndFunction
 
 Bool Function installBehavior()
-	Chronicle:Logger:Package:CustomBehavior.logDefaultInstall(self)
+	Chronicle:Package:CustomBehavior:Logger.logDefaultInstall(self)
 	return true
 EndFunction
 
 Bool Function postloadBehavior()
-	Chronicle:Logger:Package:CustomBehavior.logDefaultPostload(self)
+	Chronicle:Package:CustomBehavior:Logger.logDefaultPostload(self)
 	return true
 EndFunction
 
 Bool Function uninstallBehavior()
-	Chronicle:Logger:Package:CustomBehavior.logDefaultUninstall(self)
+	Chronicle:Package:CustomBehavior:Logger.logDefaultUninstall(self)
 	return true
 EndFunction

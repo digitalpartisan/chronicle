@@ -17,7 +17,7 @@ State Processing
 		
 		while (packages.current())
 			targetPackage = packages.current()
-			Chronicle:Logger:Engine:Component.logProcessingPackage(self, targetPackage)
+			Chronicle:Engine:Component:Logger.logProcessingPackage(self, targetPackage)
 			targetPackage.customPostloadBehavior()
 			packages.next()
 		endWhile

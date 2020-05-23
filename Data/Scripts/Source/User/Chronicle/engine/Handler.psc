@@ -35,7 +35,7 @@ Chronicle:Engine Function getEngine()
 EndFunction
 
 Function setEngine(Chronicle:Engine newEngineRef)
-	Chronicle:Logger:Engine.handlerReceivedEngine(self, newEngineRef)
+	Chronicle:Engine:Logger.handlerReceivedEngine(self, newEngineRef)
 	EngineRef = newEngineRef
 	refreshStatus()
 EndFunction
@@ -62,7 +62,7 @@ Function refreshStatus()
 		setStatus()
 	endif
 	
-	Chronicle:Logger:Engine.handlerStatus(self)
+	Chronicle:Engine:Logger.handlerStatus(self)
 EndFunction
 
 Function install()

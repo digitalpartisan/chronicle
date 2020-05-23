@@ -25,7 +25,7 @@ Function observePackageInstall()
 	RegisterForCustomEvent(targetRef, "InstallComplete")
 	RegisterForCustomEvent(targetRef, "InstallFailed")
 	
-	Chronicle:Logger:Engine:Component.logListening(self, targetRef)
+	Chronicle:Engine:Component:Logger.logListening(self, targetRef)
 EndFunction
 
 Function stopObservingPackageInstall()
@@ -34,7 +34,7 @@ Function stopObservingPackageInstall()
 	UnregisterForCustomEvent(targetRef, "InstallComplete")
 	UnregisterForCustomEvent(targetRef, "InstallFailed")
 	
-	Chronicle:Logger:Engine:Component.logStopListening(self, targetRef)
+	Chronicle:Engine:Component:Logger.logStopListening(self, targetRef)
 EndFunction
 
 Bool Function canActOnPackage(Chronicle:Package targetPackage)
@@ -53,12 +53,12 @@ Event Chronicle:Package.InstallComplete(Chronicle:Package packageRef, Var[] args
 		if (addPackageToContainer(targetRef))
 			postProcessingBehavior()
 		else
-			Chronicle:Logger:Engine:Component.logPackageNotAddedToContainer(self, targetRef)
+			Chronicle:Engine:Component:Logger.logPackageNotAddedToContainer(self, targetRef)
 			targetRef.triggerFatalError()
 			sendFatalError()
 		endif
 	else
-		Chronicle:Logger:Engine:Component.logPhantomResponse(self, targetRef, packageRef)
+		Chronicle:Engine:Component:Logger.logPhantomResponse(self, targetRef, packageRef)
 		sendFatalError()
 	endif
 EndEvent
@@ -68,7 +68,7 @@ Event Chronicle:Package.InstallFailed(Chronicle:Package packageRef, Var[] args)
 	
 	Chronicle:Package targetRef = getTargetPackage()
 	if (targetRef != packageRef)
-		Chronicle:Logger:Engine:Component.logPhantomResponse(self, targetRef, packageRef)
+		Chronicle:Engine:Component:Logger.logPhantomResponse(self, targetRef, packageRef)
 	endif
 	
 	sendFatalError()
@@ -116,10 +116,10 @@ State ProcessQueue
 		Chronicle:Package targetRef = getTargetPackage()
 		
 		if (targetRef)
-			Chronicle:Logger:Engine:Component.logProcessingPackage(self, targetRef)
+			Chronicle:Engine:Component:Logger.logProcessingPackage(self, targetRef)
 			performPackageInstallation(targetRef)
 		else
-			Chronicle:Logger:Engine:Component.logNothingToProcess(self)
+			Chronicle:Engine:Component:Logger.logNothingToProcess(self)
 			setNeedsProcessing(false)
 			setToIdle()
 		endif

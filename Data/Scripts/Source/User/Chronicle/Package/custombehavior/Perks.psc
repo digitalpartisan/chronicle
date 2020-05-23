@@ -3,7 +3,7 @@ Scriptname Chronicle:Package:CustomBehavior:Perks extends Chronicle:Package:Cust
 Perk[] Property Perks Auto Const Mandatory
 
 Function handlePerks(Bool bAdd = true)
-	Chronicle:Logger:Package:CustomBehavior.logPerks(self, bAdd)
+	Chronicle:Package:CustomBehavior:Logger.logPerks(self, bAdd)
 	
 	if (!Perks)
 		return

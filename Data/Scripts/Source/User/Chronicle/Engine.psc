@@ -131,13 +131,13 @@ Bool Function isPackageCompatible(Chronicle:Package packageRef)
 	
 	if (nonCorePackage) ; only non-core packages can be considered too old or too new
 		if (isPackageTooOld(nonCorePackage))
-			Chronicle:Logger:Engine.logPackageTooOld(self, nonCorePackage)
+			Chronicle:Engine:Logger.logPackageTooOld(self, nonCorePackage)
 			notifyTooOld(nonCorePackage)
 			return false
 		endif
 		
 		if (isPackageTooNew(nonCorePackage))
-			Chronicle:Logger:Engine.logPackageTooNew(self, nonCorePackage)
+			Chronicle:Engine:Logger.logPackageTooNew(self, nonCorePackage)
 			notifyTooNew(nonCorePackage)
 			return false
 		endif
@@ -312,7 +312,7 @@ Function gameLoaded()
 The postload component is also forced to run (when able) so that packges have an opportunity to examine what may or may not have changed in the game since the last time it was loaded.
 Strictly speaking, this should have been defined as empty here and these contents would be applicable only to the Active state, but it is possible for a mod author to retrofit their mod
 with Chronicle and a game load event might need to run on a quest object which has already been started and has no opportunity to move through the normal setup process.}
-	Chronicle:Logger:Engine.interceptedGameLoad(self)
+	Chronicle:Engine:Logger.interceptedGameLoad(self)
 	
 	; only show the generic messages once per load
 	bShownTooOldMessage = false
@@ -351,41 +351,41 @@ Event Chronicle:Engine:Component.Idled(Chronicle:Engine:Component componentRef, 
 {This is the other half of the mutex logic.  When a component goes idle, the corresponding function is called and depending on the state the engine is in, different action can be taken.
 For details regarding why this is important, see the various definitions of the component idled functions in the various states of this script.}
 	if (getInstaller() == componentRef)
-		Chronicle:Logger:Engine.logIdledInstaller(self)
+		Chronicle:Engine:Logger.logIdledInstaller(self)
 		installerIdled()
 	elseif (getUpdater() == componentRef)
-		Chronicle:Logger:Engine.logIdledUpdater(self)
+		Chronicle:Engine:Logger.logIdledUpdater(self)
 		updaterIdled()
 	elseif (getUninstaller() == componentRef)
-		Chronicle:Logger:Engine.logIdledUninstaller(self)
+		Chronicle:Engine:Logger.logIdledUninstaller(self)
 		uninstallerIdled()
 	elseif (getPostload() == componentRef)
-		Chronicle:Logger:Engine.logIdledPostload(self)
+		Chronicle:Engine:Logger.logIdledPostload(self)
 		postloadIdled()
 	else
-		Chronicle:Logger:Engine.logPhantomComponentIdled(self, componentRef)
+		Chronicle:Engine:Logger.logPhantomComponentIdled(self, componentRef)
 		triggerFatalError()
 	endif
 EndEvent
 
 Event Chronicle:Engine:Component.FatalError(Chronicle:Engine:Component componentRef, Var[] args)
 	if (getInstaller() == componentRef || getUpdater() == componentRef || getUninstaller() == componentRef || getPostload() == componentRef)
-		Chronicle:Logger:Engine.logComponentFatalError(self, componentRef)
+		Chronicle:Engine:Logger.logComponentFatalError(self, componentRef)
 	else
-		Chronicle:Logger:Engine.logPhantomComponentFatalError(self, componentRef)
+		Chronicle:Engine:Logger.logPhantomComponentFatalError(self, componentRef)
 	endif
 	
 	triggerFatalError()
 EndEvent
 
 Function observeComponent(Chronicle:Engine:Component componentRef)
-	Chronicle:Logger:Engine.logObservingComponent(self, componentRef)
+	Chronicle:Engine:Logger.logObservingComponent(self, componentRef)
 	RegisterForCustomEvent(componentRef, "Idled")
 	RegisterForCustomEvent(componentRef, "FatalError")
 EndFunction
 
 Function stopObservingComponent(Chronicle:Engine:Component componentRef)
-	Chronicle:Logger:Engine.logStopObservingComponent(self, componentRef)
+	Chronicle:Engine:Logger.logStopObservingComponent(self, componentRef)
 	UnregisterForCustomEvent(componentRef, "Idled")
 	UnregisterForCustomEvent(componentRef, "FatalError")
 EndFunction
@@ -415,7 +415,7 @@ Auto State Dormant
 			observeComponents()
 			GoToState(sStateSetup)
 		else
-			Chronicle:Logger:Engine.logComponentsNotDormant(self)
+			Chronicle:Engine:Logger.logComponentsNotDormant(self)
 			triggerFatalError()
 		endif
 	EndEvent

@@ -39,5 +39,5 @@ Function invalidate()
 	setMinor(0)
 	setBugfix(0)
 	
-	Chronicle:Logger:Version.logInvalidation(self)
+	Chronicle:Version:Logger.logInvalidation(self)
 EndFunction

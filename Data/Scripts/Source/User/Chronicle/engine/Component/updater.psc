@@ -17,7 +17,7 @@ Function observePackageUpdate()
 	RegisterForCustomEvent(targetRef, "UpdateComplete")
 	RegisterForCustomEvent(targetRef, "UpdateFailed")
 	
-	Chronicle:Logger:Engine:Component.logListening(self, targetRef)
+	Chronicle:Engine:Component:Logger.logListening(self, targetRef)
 EndFunction
 
 Function stopObservingPackageUpdate()
@@ -26,7 +26,7 @@ Function stopObservingPackageUpdate()
 	UnregisterForCustomEvent(targetRef, "UpdateComplete")
 	UnregisterForCustomEvent(targetRef, "UpdateFailed")
 	
-	Chronicle:Logger:Engine:Component.logStopListening(self, targetRef)
+	Chronicle:Engine:Component:Logger.logStopListening(self, targetRef)
 EndFunction
 
 Function goToProcessingState()
@@ -46,7 +46,7 @@ Event Chronicle:Package.UpdateComplete(Chronicle:Package packageRef, Var[] args)
 	if (targetRef == packageRef)
 		postProcessingBehavior()
 	else
-		Chronicle:Logger:Engine:Component.logPhantomResponse(self, targetRef, packageRef)
+		Chronicle:Engine:Component:Logger.logPhantomResponse(self, targetRef, packageRef)
 		sendFatalError()
 	endif
 EndEvent
@@ -56,7 +56,7 @@ Event Chronicle:Package.UpdateFailed(Chronicle:Package packageRef, Var[] args)
 	
 	Chronicle:Package targetRef = getTargetPackage()
 	if (targetRef != packageRef)
-		Chronicle:Logger:Engine:Component.logPhantomResponse(self, targetRef, packageRef)
+		Chronicle:Engine:Component:Logger.logPhantomResponse(self, targetRef, packageRef)
 	endif
 	
 	sendFatalError()
@@ -72,7 +72,7 @@ State IntegrityCheck
 		Chronicle:Package:Container packages = engineRef.GetPackages()
 		
 		if (packages.maintainIntegrity())
-			Chronicle:Logger:Engine.detectedMissingPackages(engineRef)
+			Chronicle:Engine:Logger.detectedMissingPackages(engineRef)
 			engineRef.MissingPackagesMessage.Show()
 		endif
 		

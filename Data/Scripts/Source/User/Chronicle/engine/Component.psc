@@ -36,7 +36,7 @@ EndFunction
 
 Function setNeedsProcessing(Bool bValue = true)
 	bNeedsProcessing = bValue
-	Chronicle:Logger:Engine:Component.logNeedsProcessing(self, bValue)
+	Chronicle:Engine:Component:Logger.logNeedsProcessing(self, bValue)
 EndFunction
 
 Int Function getQueueSize()
@@ -76,12 +76,12 @@ Bool Function queuePackage(Chronicle:Package packageRef)
 
 	if (canActOnPackage(packageRef))
 		PackageQueue.Add(packageRef)
-		Chronicle:Logger:Engine:Component.logQueued(self, packageRef)
+		Chronicle:Engine:Component:Logger.logQueued(self, packageRef)
 		setNeedsProcessing()
 		
 		return true
 	else
-		Chronicle:Logger:Engine:Component.logCannotQueue(self, packageRef)
+		Chronicle:Engine:Component:Logger.logCannotQueue(self, packageRef)
 		return false
 	endif
 EndFunction
@@ -107,7 +107,7 @@ EndFunction
 
 Function process()
 {This is the function an engine calls to cause a component to operate.  In effect, it is the entry point for all other behaviors a component will perform.}
-	Chronicle:Logger:Engine.logProcessComponent(self)
+	Chronicle:Engine:Logger.logProcessComponent(self)
 	setNeedsProcessing(false)
 	goToProcessingState()
 EndFunction

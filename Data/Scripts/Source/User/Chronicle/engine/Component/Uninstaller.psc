@@ -30,7 +30,7 @@ Function observePackageUninstall()
 	RegisterForCustomEvent(targetRef, "UninstallComplete")
 	RegisterForCustomEvent(targetRef, "UninstallFailed")
 	
-	Chronicle:Logger:Engine:Component.logListening(self, targetRef)
+	Chronicle:Engine:Component:Logger.logListening(self, targetRef)
 EndFunction
 
 Function stopObservingPackageUninstall()
@@ -39,7 +39,7 @@ Function stopObservingPackageUninstall()
 	UnregisterForCustomEvent(targetRef, "UninstallComplete")
 	UnregisterForCustomEvent(targetRef, "UninstallFailed")
 	
-	Chronicle:Logger:Engine:Component.logStopListening(self, targetRef)
+	Chronicle:Engine:Component:Logger.logStopListening(self, targetRef)
 EndFunction
 
 Bool Function removePackageFromContainer(Chronicle:Package packageRef)
@@ -63,11 +63,11 @@ Event Chronicle:Package.UninstallComplete(Chronicle:Package packageRef, Var[] ar
 		if (removePackageFromContainer(targetRef))
 			postProcessingBehavior()
 		else
-			Chronicle:Logger:Engine:Component.logPackageNotRemovedFromContainer(self, targetRef)
+			Chronicle:Engine:Component:Logger.logPackageNotRemovedFromContainer(self, targetRef)
 			sendFatalError()
 		endif
 	else
-		Chronicle:Logger:Engine:Component.logPhantomResponse(self, targetRef, packageRef)
+		Chronicle:Engine:Component:Logger.logPhantomResponse(self, targetRef, packageRef)
 		sendFatalError()
 	endif
 EndEvent
@@ -77,10 +77,10 @@ Event Chronicle:Package.UninstallFailed(Chronicle:Package packageRef, Var[] args
 	
 	Chronicle:Package targetRef = getTargetPackage()
 	if (targetRef != packageRef)
-		Chronicle:Logger:Engine:Component.logPhantomResponse(self, targetRef, packageRef)
+		Chronicle:Engine:Component:Logger.logPhantomResponse(self, targetRef, packageRef)
 	endif
 	
-	Chronicle:Logger:Engine:Component.logPackageFailure(self, targetRef)
+	Chronicle:Engine:Component:Logger.logPackageFailure(self, targetRef)
 	sendFatalError()
 EndEvent
 

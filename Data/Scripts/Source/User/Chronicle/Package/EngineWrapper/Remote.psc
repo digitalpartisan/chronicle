@@ -16,7 +16,7 @@ Chronicle:Engine function loadEngine()
 		return None
 	endif
 	
-	return MyPlugin.lookupWithDigits(EngineDigits) as Chronicle:Engine
+	return MyPlugin.lookup(EngineDigits) as Chronicle:Engine
 EndFunction
 
 Chronicle:Engine Function getEngineObject()

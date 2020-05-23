@@ -40,7 +40,7 @@ Bool Function maintainIntegrity()
 			next()
 		else ; if the current package is not intact, then remove it
 			bResult = true
-			Chronicle:Logger:Engine.logMissingPackageRemoved(engineRef, packageRef)
+			Chronicle:Engine:Logger.logMissingPackageRemoved(engineRef, packageRef)
 			removeCurrent()
 		endif
 		
