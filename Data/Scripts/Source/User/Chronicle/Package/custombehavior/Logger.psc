@@ -1,9 +1,8 @@
 Scriptname Chronicle:Package:CustomBehavior:Logger Hidden Const DebugOnly
 
 String[] Function getTags() Global
-	String[] tags = new String[0]
-	tags.Add("Package")
-	tags.Add("CustomBehavior")
+	String[] tags = Chronicle:Package:Logger.getTags()
+	tags.Add("Custom Behavior")
 	return tags
 EndFunction
 

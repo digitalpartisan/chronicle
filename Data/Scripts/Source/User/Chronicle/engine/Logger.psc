@@ -1,8 +1,8 @@
 Scriptname Chronicle:Engine:Logger Hidden Const DebugOnly
 
 String[] Function getTags() Global
-	String[] tags = new String[1]
-	tags[0] = "Engine"
+	String[] tags = new String[0]
+	tags.Add("Engine")
 	return tags
 EndFunction
 

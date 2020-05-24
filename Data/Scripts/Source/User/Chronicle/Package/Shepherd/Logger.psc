@@ -1,8 +1,7 @@
 Scriptname Chronicle:Package:Shepherd:Logger Hidden Const DebugOnly
 
 String[] Function getTags() Global
-	String[] tags = new String[0]
-	tags.Add("Package")
+	String[] tags = Chronicle:Package:Logger.getTags()
 	tags.Add("Shepherd")
 	return tags
 EndFunction

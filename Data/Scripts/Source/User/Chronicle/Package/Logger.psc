@@ -1,8 +1,8 @@
 Scriptname Chronicle:Package:Logger Hidden Const DebugOnly
 
 String[] Function getTags() Global
-	String[] tags = new String[1]
-	tags[0] = "Package"
+	String[] tags = new String[0]
+	tags.Add("Package")
 	return tags
 EndFunction
 
