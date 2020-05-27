@@ -1,43 +1,84 @@
 Scriptname Chronicle:Package:CustomBehavior:Perks extends Chronicle:Package:CustomBehavior
 
-Perk[] Property Perks Auto Const Mandatory
+Struct PerkData
+	Perk thePerk = None
+	Bool addOnInstall = true
+	Bool removeOnUninstall = true
+EndStruct
 
-Function handlePerks(Bool bAdd = true)
-	Chronicle:Package:CustomBehavior:Logger.logPerks(self, bAdd)
+Perk[] Property Perks Auto Const
+PerkData[] Property AdvancedSettings Auto Const
+
+Function handlePerk(Perk thePerk, Bool bInstall = false)
+	if (!thePerk)
+		return
+	endif
 	
-	if (!Perks)
+	Actor aPlayer = Game.GetPlayer()
+	Bool bHas = aPlayer.HasPerk(thePerk)
+	if (bInstall && !bHas)
+		aPlayer.AddPerk(thePerk)
+	elseif (!bInstall && bHas)
+		aPlayer.RemovePerk(thePerk)
+	endif
+EndFunction
+
+Function handlePerks(Bool bInstall = true)
+	if (!Perks || !Perks.Length)
 		return
 	endif
 	
 	Int iCounter = 0
-	Actor aPlayer = Game.GetPlayer()
-	Perk pPerk = None
-	Bool bHas = false
 	while (iCounter < Perks.Length)
-		pPerk = Perks[iCounter]
-		bHas = aPlayer.HasPerk(pPerk)
-		
-		if (bAdd && !bHas)
-			aPlayer.AddPerk(pPerk)
-		elseif (!bAdd && bHas)
-			aPlayer.RemovePerk(pPerk)
-		endif
-		
+		handlePerk(Perks[iCounter])
 		iCounter += 1
 	endWhile
 EndFunction
 
+Function handlePerkData(PerkData data, Bool bInstall = true)
+	if (!data || !data.thePerk)
+		return
+	endif
+	
+	if (bInstall && data.addOnInstall)
+		handlePerk(data.thePerk)
+	endif
+	
+	if (!bInstall && data.removeOnUninstall)
+		handlePerk(data.thePerk, false)
+	endif
+EndFunction
+
+Function handleAdvancedSettings(Bool bInstall = true)
+	if (!AdvancedSettings || !AdvancedSettings.Length)
+		return
+	endif
+	
+	Int iCounter = 0
+	while (iCounter < AdvancedSettings.Length)
+		handlePerkData(AdvancedSettings[iCounter], bInstall)
+		iCounter += 1
+	endWhile
+EndFunction
+
+Function handle(Bool bInstall = true)
+	Chronicle:Package:CustomBehavior:Logger.logPerks(self, bInstall)
+	
+	handlePerks(bInstall)
+	handleAdvancedSettings(bInstall)
+EndFunction
+
 Bool Function installBehavior()
-	handlePerks()
+	handle()
 	return true
 EndFunction
 
 Bool Function postloadBehavior()
-	handlePerks()
+	handle()
 	return true
 EndFunction
 
 Bool Function uninstallBehavior()
-	handlePerks(false)
+	handle(false)
 	return true
 EndFunction
