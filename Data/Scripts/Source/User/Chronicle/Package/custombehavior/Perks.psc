@@ -30,7 +30,7 @@ Function handlePerks(Bool bInstall = true)
 	
 	Int iCounter = 0
 	while (iCounter < Perks.Length)
-		handlePerk(Perks[iCounter])
+		handlePerk(Perks[iCounter], bInstall)
 		iCounter += 1
 	endWhile
 EndFunction

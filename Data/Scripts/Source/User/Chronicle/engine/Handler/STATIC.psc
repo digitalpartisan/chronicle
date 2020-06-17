@@ -7,5 +7,5 @@ Chronicle:Engine Function getEngine()
 EndFunction
 
 Function setEngine(Chronicle:Engine newEngine)
-	; do nothing - the engine is already setEngine
+	; do nothing - the engine is already set
 EndFunction
