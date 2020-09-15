@@ -1,2 +1,4 @@
 .idea
-*.sublime-*
+*.sublime*
+.scaffold
+*.ppj

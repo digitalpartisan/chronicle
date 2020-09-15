@@ -1,2 +1,0 @@
-SCAFFOLD_MOD="Chronicle"
-SCAFFOLD_GAME="fallout4"
