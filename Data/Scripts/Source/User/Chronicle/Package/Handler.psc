@@ -5,12 +5,16 @@ For examples of how to apply this script, reference the Chronicle Testing plugin
 
 Message Property InvalidPackageMessage Auto Const Mandatory
 {The message to display in the terminal if an invalid package is specified.}
+Chronicle:Package:CustomBehavior:Paginator Property CustomizationPaginator Auto Const
+{Optional paginator object when the terminal displaying this handler must paginate the customization options of this package.}
+Chronicle:Package:CustomBehavior:List Property CustomizationList Auto Const
+{Optional list object to assist in paginating the custom behaviors on this package.}
 
 Bool bValid = false Conditional ; whether or not there's a valid Package to handle
 Bool bCanInstall = false Conditional ; whether or not the package can be installed
 Bool bCanUninstall = false Conditional ; whether or not the package can be uninstalled
 
-Chronicle:Package PackageRef = None
+Chronicle:Package packageRef = None
 
 Bool Function isValid()
 	return bValid
@@ -25,17 +29,17 @@ Bool Function canUninstall()
 EndFunction
 
 Chronicle:Package Function getPackage()
-	return PackageRef
+	return packageRef
 EndFunction
 
 Function setPackage(Chronicle:Package newPackageRef)
 	Chronicle:Package:Logger.handlerReceivedPackage(self, newPackageRef)
-	PackageRef = newPackageRef
+	packageRef = newPackageRef
 	refreshStatus()
 EndFunction
 
 Function refreshStatus()
-	bValid = false
+	bValid = false 
 	bCanInstall = false
 	bCanUninstall = false
 	
@@ -52,6 +56,19 @@ Function refreshStatus()
 	Chronicle:Package:Logger.handlerStatus(self)
 EndFunction
 
+Chronicle:Package:CustomBehavior:Paginator Function getCustomizationPaginator()
+	return CustomizationPaginator
+EndFunction
+
+Chronicle:Package:CustomBehavior:List Function getCustomizationList()
+	if (!isValid() || !CustomizationList)
+		return None
+	endif
+
+	CustomizationList.setPackage(getPackage())
+	return CustomizationList
+EndFunction
+
 Function install()
 	if (!isValid() || !canInstall())
 		return
@@ -66,6 +83,17 @@ Function uninstall()
 	endif
 	
 	getPackage().requestUninstallation()
+EndFunction
+
+Function paginateCustomBehaviors(ObjectReference akTerminalRef)
+	DynamicTerminal:Paginator paginator = getCustomizationPaginator()
+	Dynamicterminal:ListWrapper list = getCustomizationList()
+
+	if (!paginator || !list)
+		return
+	endif
+
+	paginator.init(akTerminalRef, list)
 EndFunction
 
 Function tokenReplacementLogic()
