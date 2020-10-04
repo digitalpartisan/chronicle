@@ -9,6 +9,12 @@ Chronicle:Package:CustomBehavior:Paginator Property CustomizationPaginator Auto 
 {Optional paginator object when the terminal displaying this handler must paginate the customization options of this package.}
 Chronicle:Package:CustomBehavior:List Property CustomizationList Auto Const
 {Optional list object to assist in paginating the custom behaviors on this package.}
+InjectTec:Integrator:ChronicleBehavior:Search Property IntegratorSearcher Auto Const
+{Optional integrator search object to assist with locating one and only one Third-Party integration set on this package.}
+InjectTec:Integrator:Paginator Property IntegratorPaginator Auto Const
+{Optional paginator object to assist with paginating third-party integrations.}
+DynamicTerminal:ListWrapper:FormList:Dynamic Property IntegratorList Auto Const
+{Optional list wrapper to assist with paginator third-party integration options.}
 
 Bool bValid = false Conditional ; whether or not there's a valid Package to handle
 Bool bCanInstall = false Conditional ; whether or not the package can be installed
@@ -69,6 +75,29 @@ Chronicle:Package:CustomBehavior:List Function getCustomizationList()
 	return CustomizationList
 EndFunction
 
+InjectTec:Integrator:ChronicleBehavior:Search Function getIntegratorSearcher()
+	return IntegratorSearcher
+EndFunction
+
+InjectTec:Integrator:Paginator Function getIntegratorPaginator()
+	return IntegratorPaginator
+EndFunction
+
+DynamicTerminal:ListWrapper:FormList:Dynamic Function getIntegratorList()
+	if (!isValid() || !IntegratorList)
+		return None
+	endif
+
+	InjectTec:Integrator:ChronicleBehavior integratorBehavior = getIntegratorSearcher().searchOneIntegrator(getPackage())
+	if (!integratorBehavior)
+		IntegratorList.setData(None)
+		return IntegratorList
+	endif
+
+	IntegratorList.setData(integratorBehavior.Integrators)
+	return IntegratorList
+EndFunction
+
 Function install()
 	if (!isValid() || !canInstall())
 		return
@@ -88,6 +117,17 @@ EndFunction
 Function paginateCustomBehaviors(ObjectReference akTerminalRef)
 	DynamicTerminal:Paginator paginator = getCustomizationPaginator()
 	Dynamicterminal:ListWrapper list = getCustomizationList()
+
+	if (!paginator || !list)
+		return
+	endif
+
+	paginator.init(akTerminalRef, list)
+EndFunction
+
+Function paginateThirdPartyIntegrations(ObjectReference akTerminalRef)
+	InjectTec:Integrator:Paginator paginator = getIntegratorPaginator()
+	DynamicTerminal:ListWrapper list = getIntegratorList()
 
 	if (!paginator || !list)
 		return
