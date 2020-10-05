@@ -23,3 +23,8 @@ Bool Function isEngineAccessible()
 {Once again, trivial.  As with getEngine(), reference the Chronicle:Package:Noncore script to understand this function's real purpose.}
 	return true
 EndFunction
+
+Bool Function isCanaryEligible()
+{Also trivial. The Core package is always eligible for calling Canary.}
+	return true
+EndFunction

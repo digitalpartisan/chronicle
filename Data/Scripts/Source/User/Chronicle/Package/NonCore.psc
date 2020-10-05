@@ -48,3 +48,9 @@ Bool Function isEngineAccessible()
 	
 	return (None != myEngine)
 EndFunction
+
+Bool Function isCanaryEligible()
+{A non-core package is eligible to call the Canary API unless it is part of an AIO package and its engine is running in AIO mode.  In this case, the Core package's Canary call will be more than sufficient.}
+	Chronicle:Engine engineObject = getEngine()
+	return engineObject && !isInAIO() || !engineObject.isAIOModeActive() ; if the engine object can't be acquired, something is wrong, so return false by default to prevent further problems
+EndFunction

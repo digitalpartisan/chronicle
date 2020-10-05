@@ -49,6 +49,11 @@ String sStateTeardown = "Teardown" Const
 String sStateDecommissioned = "Decommissioned" Const
 String sStateFatalError = "FatalError" Const
 
+Bool Function isCanaryEligible()
+{Override this in child scripts to determine whether or not a particular package should attempt to call the Canary API.}
+	return false
+EndFunction
+
 Function showMessageIfSet(Message messageObj = None)
 	if (messageObj)
 		messageObj.Show()
