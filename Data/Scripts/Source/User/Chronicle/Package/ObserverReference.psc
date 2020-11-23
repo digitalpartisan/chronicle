@@ -147,7 +147,7 @@ EndState
 State Ready
 	Event OnBeginState(String asOldState)
 		BlockActivation(false, false)
-		Enable() ; useful for non-workshop placed objects that start disabled so that they're not visible unless their package is running
+		!IsEnabled() && Enable() ; useful for non-workshop placed objects that start disabled so that they're not visible unless their package is running
 	EndEvent
 	
 	Event OnActivate(ObjectReference akActionRef)
